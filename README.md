@@ -40,7 +40,6 @@ A modern Point of Sale (POS) and Store Management desktop application built with
 │   ├── SetupProgram.cs
 │   └── UninstallProgram.cs
 └── assignment_code/                # Main application project
-    ├── .env.example                # Environment configuration template
     ├── assignment_code.csproj      # Project file
     ├── App.config                  # Runtime configuration and assembly bindings
     ├── Program.cs                  # Application entry point
@@ -61,12 +60,7 @@ A modern Point of Sale (POS) and Store Management desktop application built with
 - Active PostgreSQL Database instance
 
 ### Environment Configuration
-1. Navigate into the `assignment_code` directory.
-2. Copy `.env.example` to `.env`:
-   ```powershell
-   Copy-Item "assignment_code\.env.example" "assignment_code\.env"
-   ```
-3. Open `.env` and fill in your PostgreSQL credentials and store settings:
+1. Create a `.env` file in the `assignment_code` directory with your PostgreSQL credentials and store settings:
    ```ini
    DB_CONNECTION=pgsql
    DB_HOST=your_host
