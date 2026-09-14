@@ -1,0 +1,211 @@
+# ==========================================
+# PCCFPI STORE - TRANSLATIONS FILE
+# Format: Key=EnglishText|KhmerText
+# ==========================================
+
+# Navigation
+Dashboard=Dashboard|ផ្ទាំងគ្រប់គ្រង
+Products=Products|ទំនិញ
+Categories=Categories|ប្រភេទទំនិញ
+Electronics=Electronics|គ្រឿងអេឡិចត្រូនិច
+Beverages=Beverages|ភេសជ្ជៈ
+Snacks=Snacks|ចំណីអាហារ
+Apparel=Apparel|សម្លៀកបំពាក់
+Stationery=Stationery|សម្ភារៈការិយាល័យ
+Home Goods=Home Goods|សម្ភារៈប្រើប្រាស់ក្នុងផ្ទះ
+Sale=Sale|ការលក់
+POS=POS|ប្រព័ន្ធ POS
+List sale=List sale|បញ្ជីការលក់
+Order=Order|ការបញ្ជាទិញ
+Customer=Customer|អតិថិជន
+Users=Users|អ្នកប្រើប្រាស់
+Report=Report|របាយការណ៍
+Appearance=Appearance|រូបរាង
+Settings=Settings|ការកំណត់
+SYSTEM=SYSTEM|ប្រព័ន្ធ
+
+# Top Header
+Welcome=Welcome|សូមស្វាគមន៍
+SearchPlaceholder=Search for find products ...|ស្វែងរករកទំនិញ ...
+Notifications=Notifications|សេចក្តីជូនដំណឹង
+NotificationsTitle=Notifications|សេចក្តីជូនដំណឹង
+NoNotificationsYet=No notifications yet|មិនទាន់មានសេចក្តីជូនដំណឹងនៅឡើយទេ
+ClearAll=Clear all|សម្អាតទាំងអស់
+StoreName=PCCFPI STORE|ហាង PCCFPI
+MasterITTitle=Master-IT Learn Online|Master-IT Learn Online
+LoggedInSuccessfully=Logged in successfully!|ចូលប្រើប្រាស់ជោគជ័យ!
+PopularCourses=Popular Courses|វគ្គសិក្សាពេញនិយម
+ViewDetails=View Details|មើលលម្អិត
+NoDescription=No description|មិនមានការពិពណ៌នា
+SpecialJobPackage=Special Job Training Package|កញ្ចប់ពិសេសសម្រាប់ការងារ
+ComputerProgramForJob=Computer Program For Job|Computer Program For Job
+StudyDetailApps=In-depth software training|សិក្សាលម្អិតលើកម្មវិធី
+PracticalExercises=Theory and hands-on projects|ទ្រឹស្តីលំហាត់អនុវត្តន៍
+SkillConsultation=Professional skill mentorship|ប្រឹក្សាអភិវឌ្ឍន៍ជំនាញ
+CertificationExam=Certificate of Completion Exam|ប្រឡងយកវិញ្ញាបនបត្រ
+
+# KPI Metrics (Dashboard)
+TotalProducts=Total Products|ទំនិញសរុប
+TotalCategories=Total Categories|ប្រភេទសរុប
+TotalOrders=Total Orders|ការបញ្ជាទិញសរុប
+PendingReports=Pending Reports|របាយការណ៍រង់ចាំ
+
+# Charts & Tables
+ProductGrowth=Product Growth|កំណើនទំនិញ
+ReportsTrend=Reports Trend|និន្នាការរបាយការណ៍
+LatestProducts=Latest Products|ទំនិញចុងក្រោយ
+RecentReports=Recent Reports|របាយការណ៍ថ្មីៗ
+Author=Author|អ្នករាយការណ៍
+ReportPreview=Report Preview|ខ្លឹមសារសង្ខេប
+View=View|ពិនិត្យមើល
+Product=Product|ទំនិញ
+Date=Date|កាលបរិច្ឆេទ
+Total number of products=Total number of products|ចំនួនទំនិញសរុប
+
+# POS Terminal
+CurrentOrder=Current Order|ការបញ្ជាទិញបច្ចុប្បន្ន
+Subtotal=Subtotal|សរុបរង
+Tax=Tax|ពន្ធ
+Total=Total|សរុបរួម
+CustomerName=Customer Name:|ឈ្មោះអតិថិជន:
+PaymentMethod=Payment Method:|វិធីទូទាត់:
+CompleteSale=Complete Sale (Checkout)|ទូទាត់ប្រាក់ (បញ្ចប់ការលក់)
+ClearCart=Clear Cart|សម្អាតកន្ត្រក
+Cash=Cash|សាច់ប្រាក់
+CreditCard=Credit Card|កាតធនាគារ
+QRPay=QR Pay|ស្កេន QR
+CartIsEmpty=Cart is Empty|គ្មានទំនិញក្នុងកន្ត្រកទេ
+TapToAddToOrder=Click any product to add|សូមចុចលើទំនិញដើម្បីបន្ថែម
+Add=+ Add|+ បន្ថែម
+
+# Common Actions & Buttons
+AddNewProduct=+ Add New Product|+ បន្ថែមទំនិញថ្មី
+AddNewCategory=+ Add New Category|+ បន្ថែមប្រភេទថ្មី
+AddNewCustomer=+ Add New Customer|+ បន្ថែមអតិថិជនថ្មី
+AddStaffMember=+ Add Staff Member|+ បន្ថែមបុគ្គលិក
+ExportReport=Export Report (CSV)|ទាញយករបាយការណ៍ (CSV)
+SaveSettings=Save Store Settings|រក្សាទុកការកំណត់
+Delete=Delete|លុប
+
+ViewReceipt=View Receipt|មើលបង្កាន់ដៃ
+ChangeStatus=Change Status|ប្តូរស្ថានភាព
+ToggleStatus=Toggle Status|ប្តូរស្ថានភាព
+
+# Statuses & Filters
+All=All|ទាំងអស់
+InStock=In Stock|មានក្នុងស្តុក
+LowStock=Low Stock|ជិតអស់ស្តុក
+OutOfStock=Out of Stock|អស់ពីស្តុក
+Pending=Pending|រង់ចាំ
+Processing=Processing|កំពុងដំណើរការ
+Shipped=Shipped|បានផ្ញើ
+Delivered=Delivered|បានដឹកជញ្ជូន
+Cancelled=Cancelled|បានបោះបង់
+Active=Active|សកម្ម
+Suspended=Suspended|ផ្អាក
+
+# POS & Cart
+All=All|ទាំងអស់
+Electronics=Electronics|គ្រឿងអេឡិចត្រូនិច
+Beverages=Beverages|ភេសជ្ជៈ
+Snacks=Snacks|ចំណីអាហារ
+Apparel=Apparel|សម្លៀកបំពាក់
+Stationery=Stationery|សម្ភារៈការិយាល័យ
+Home Goods=Home Goods|សម្ភារៈប្រើប្រាស់ក្នុងផ្ទះ
+CurrentOrder=Current Order|ការបញ្ជាទិញបច្ចុប្បន្ន
+CartIsEmpty=Cart is Empty|គ្មានទំនិញក្នុងកន្ត្រកទេ
+TapToAddToOrder=Click any product on the left to add|សូមចុចលើទំនិញដើម្បីបន្ថែម
+Subtotal=Subtotal|សរុបរង
+Tax=Tax|ពន្ធ
+Total=Total|សរុបរួម
+CustomerName=Customer Name:|ឈ្មោះអតិថិជន:
+PaymentMethod=Payment Method:|វិធីទូទាត់:
+CompleteSale=Complete Sale (Checkout)|ទូទាត់ប្រាក់ (បញ្ចប់ការលក់)
+ClearCart=Clear Cart|សម្អាតកន្ត្រក
+Add=+ Add|+ បន្ថែម
+InStock=in stock|ក្នុងស្តុក
+OutOfStock=Out of stock|អស់ពីស្តុក
+
+# Table Column Headers
+SKU=SKU|កូដទំនិញ
+ProductName=Product Name|ឈ្មោះទំនិញ
+Category=Category|ប្រភេទទំនិញ
+Price=Price ($)|តម្លៃ ($)
+Stock=Stock|ស្តុក
+Action=Action|សកម្មភាព
+InvoiceNo=Invoice #|លេខវិក្កយបត្រ
+DateTime=Date & Time|កាលបរិច្ឆេទ & ម៉ោង
+Items=Items|ចំនួនទំនិញ
+Payment=Payment|វិធីទូទាត់
+Receipt=Receipt|បង្កាន់ដៃ
+OrderId=Order ID|លេខបញ្ជាទិញ
+ItemsSummary=Items Summary|ទំនិញសង្ខេប
+OrderDate=Order Date|ថ្ងៃបញ្ជាទិញ
+CustomerId=Customer ID|លេខអតិថិជន
+FullName=Full Name|ឈ្មោះពេញ
+Email=Email|អ៊ីមែល
+Phone=Phone|លេខទូរស័ព្ទ
+Orders=Orders|ការបញ្ជាទិញ
+TotalSpent=Total Spent|ចំណាយសរុប
+Tier=Tier|កម្រិត
+UserId=User ID|លេខសម្គាល់
+EmailAddress=Email Address|អាសយដ្ឋានអ៊ីមែល
+Role=Role|តួនាទី
+LastLogin=Last Login|ចូលចុងក្រោយ
+Revenue=Revenue|ចំណូល
+
+# Reports & Metrics
+GrossRevenue=Gross Revenue|ចំណូលដុល
+NetProfit=Net Profit|ប្រាក់ចំណេញសុទ្ធ
+AverageTicket=Average Ticket|មធ្យមភាគវិក្កយបត្រ
+TotalTransactions=Total Transactions|ប្រតិបត្តិការសរុប
+TopPerformingProducts=Top Performing Products|ទំនិញលក់ដាច់បំផុត
+CategoryRevenueBreakdown=Category Revenue Breakdown|ចំណូលតាមប្រភេទទំនិញ
+
+# Settings Screen
+StoreProfileAndContact=Store Profile & Contact|ព័ត៌មាន & ទំនាក់ទំនងហាង
+PosAndFinancialConfig=POS & Financial Configuration|ការកំណត់ POS & ហិរញ្ញវត្ថុ
+StoreName:=Store Name:|ឈ្មោះហាង:
+Phone:=Phone:|លេខទូរស័ព្ទ:
+Email:=Email:|អ៊ីមែល:
+StoreAddress:=Store Address:|អាសយដ្ឋានហាង:
+CurrencySymbol:=Currency Symbol:|និមិត្តសញ្ញារូបិយប័ណ្ណ:
+SalesTaxRate:=Sales Tax Rate (%):|អត្រាពន្ធលក់ (%):
+ReceiptHeader:=Receipt Header Text:|ចំណងជើងក្បាលវិក្កយបត្រ:
+ReceiptFooter:=Receipt Footer Message:|សារបាតវិក្កយបត្រ:
+
+# Login Screen
+Login=Login|ចូលគណនី
+LoginTitle=Login|ចូលគណនី
+Username=Username|ឈ្មោះគណនី
+LoginButton=Login|ចូលប្រើប្រាស់
+DontHaveAccount=Don't have an account?|មិនទាន់មានគណនីមែនទេ?
+SignUp=Sign up|ចុះឈ្មោះ
+SignIn=Sign In|ចូលប្រើប្រាស់
+WelcomeBack=Welcome Back|សូមស្វាគមន៍មកវិញ
+LoginSubtitle=Enter your credentials to access your store portal|សូមបញ្ចូលព័ត៌មានគណនីរបស់អ្នកដើម្បីចូលប្រើប្រាស់
+EmailOrUsername=Email or Username|អ៊ីមែល ឬ ឈ្មោះគណនី
+Password=Password|ពាក្យសម្ងាត់
+RememberMe=Remember me|ចងចាំខ្ញុំ
+ForgotPassword=Forgot Password?|ភ្លេចពាក្យសម្ងាត់?
+QuickLoginAs=Quick demo accounts:|គណនីគំរូរហ័ស:
+InvalidCredentials=Invalid credentials. Please verify your email and password.|ព័ត៌មានមិនត្រឹមត្រូវទេ។ សូមពិនិត្យមើលអ៊ីមែល និងពាក្យសម្ងាត់ឡើងវិញ។
+AccountSuspended=This account is suspended. Please contact administrator.|គណនីនេះត្រូវបានផ្អាក។ សូមទាក់ទងអ្នកគ្រប់គ្រង។
+LoginSuccess=Login successful! Loading dashboard...|ការចូលបានជោគជ័យ! កំពុងដំណើរការ...
+DatabaseConnected=PostgreSQL Connected|បានភ្ជាប់ PostgreSQL
+DemoMode=Demo / Local Mode|របៀបសាកល្បង
+UsernamePlaceholder=stephanie@pccfpistore.com|stephanie@pccfpistore.com
+PasswordPlaceholder=Enter your password|បញ្ចូលពាក្យសម្ងាត់
+
+# Database & Migration
+DatabaseSettings=Database & Migration|ការកំណត់មូលដ្ឋានទិន្នន័យ & Migration
+RunMigration=Migrate Database Now|ដំណើរការ Migrate មូលដ្ឋានទិន្នន័យ
+TestConnection=Test DB Connection|តេស្តការភ្ជាប់ DB
+DatabaseStatus=Database Status:|ស្ថានភាពមូលដ្ឋានទិន្នន័យ:
+MigrationSuccess=Database migration completed successfully!|ការ Migrate មូលដ្ឋានទិន្នន័យបានជោគជ័យ!
+MigrationFailed=Database migration failed.|ការ Migrate មូលដ្ឋានទិន្នន័យបានបរាជ័យ។
+
+# Authentication & Session
+Logout=Logout|ចាកចេញ
+ConfirmLogout=Are you sure you want to log out from PCCFPI STORE?|តើអ្នកពិតជាចង់ចាកចេញពីប្រព័ន្ធ PCCFPI STORE មែនទេ?
+LogoutSuccess=You have been logged out.|អ្នកបានចាកចេញដោយជោគជ័យ។

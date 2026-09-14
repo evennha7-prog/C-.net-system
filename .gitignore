@@ -1,0 +1,88 @@
+## =======================================================================
+## PCCFPI STORE - Git Ignore Rules
+## =======================================================================
+
+# -----------------------------------------------------------------------
+# Sensitive Files & Environments (Do NOT commit credentials to Git)
+# -----------------------------------------------------------------------
+.env
+.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+!.env.example
+*.key
+*.pem
+*.pfx
+*.cert
+*.p12
+
+# -----------------------------------------------------------------------
+# Visual Studio / IDE temporary files & User settings
+# -----------------------------------------------------------------------
+.vs/
+.idea/
+.vscode/
+*.suo
+*.user
+*.userosv
+*.userprefs
+*.sln.docstates
+*.DotSettings.user
+*.VisualState.xml
+*.swp
+*.bak
+*~
+
+# -----------------------------------------------------------------------
+# Build and Compilation Outputs
+# -----------------------------------------------------------------------
+**/[Oo]bj/
+**/[Dd]ist/
+**/[Bb]ld/
+**/[Ll]og/
+**/[Ll]ogs/
+**/bin/Release/
+**/bin/x86/
+**/bin/x64/
+**/bin/ARM/
+**/bin/ARM64/
+
+# Keep required referenced 3rd-party DLL assemblies in assignment_code/bin/Debug
+# but ignore all project build outputs, executables, symbols, configs, and caches:
+assignment_code/bin/Debug/assignment_code.*
+assignment_code/bin/Debug/mscorlib.dll
+assignment_code/bin/Debug/*.pdb
+assignment_code/bin/Debug/*.exe
+assignment_code/bin/Debug/*.exe.config
+assignment_code/bin/Debug/*.xml
+assignment_code/bin/Debug/*.nlp
+assignment_code/bin/Debug/teanslations.txt
+assignment_code/bin/Debug/icons/
+assignment_code/bin/Debug/.env
+
+# -----------------------------------------------------------------------
+# Packages & External Tools
+# -----------------------------------------------------------------------
+packages/
+*.nupkg
+nuget.exe
+
+# -----------------------------------------------------------------------
+# Distribution & Installer Archives
+# -----------------------------------------------------------------------
+dist/
+installer_build/
+*.zip
+*.tar.gz
+*.7z
+
+# -----------------------------------------------------------------------
+# OS Generated Files
+# -----------------------------------------------------------------------
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
