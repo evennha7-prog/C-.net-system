@@ -24,8 +24,8 @@ namespace assignment_code.Services.Database
             // For cloud-hosted databases (Aiven, Neon, AWS RDS, Supabase)
             sb.Append("SSL Mode=Require;");
             sb.Append("Trust Server Certificate=true;");
-            sb.Append("Timeout=15;");
-            sb.Append("Command Timeout=30;");
+            sb.Append("Timeout=4;");
+            sb.Append("Command Timeout=10;");
 
             return sb.ToString();
         }

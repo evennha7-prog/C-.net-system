@@ -79,7 +79,7 @@ namespace assignment_code.UI
 
             // Default pre-fill
             _txtUsername.Text = "stephanie@pccfpistore.com";
-            _txtPassword.Text = "••••••••";
+            _txtPassword.Text = "admin123";
         }
 
         private void InitializeSpinner()

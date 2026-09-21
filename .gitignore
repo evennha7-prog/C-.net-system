@@ -63,6 +63,7 @@ assignment_code/bin/Debug/.env
 # Packages & External Tools
 # -----------------------------------------------------------------------
 packages/
+node_modules/
 *.nupkg
 nuget.exe
 

@@ -285,6 +285,7 @@ namespace assignment_code.Services.Database
             {
                 const string seedUsersSql = @"
                     INSERT INTO users (id, full_name, email, password_hash, role, status, last_login) VALUES
+                    ('USR-00', 'System Administrator', 'admin@pccfpistore.com', 'admin123', 'Administrator', 'Active', NOW()),
                     ('USR-01', 'Stephanie Sharkey', 'stephanie@pccfpistore.com', 'admin123', 'Administrator', 'Active', NOW() - INTERVAL '1 hour'),
                     ('USR-02', 'Alexander Vance', 'alex@pccfpistore.com', 'manager123', 'Store Manager', 'Active', NOW() - INTERVAL '3 hour'),
                     ('USR-03', 'Mia Thornton', 'mia.t@pccfpistore.com', 'cashier123', 'Cashier', 'Active', NOW() - INTERVAL '5 hour'),

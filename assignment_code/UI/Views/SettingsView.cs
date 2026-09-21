@@ -256,7 +256,9 @@ namespace assignment_code.UI.Views
             await Task.Run(() =>
             {
                 ok = DbConnectionHelper.TestConnection(out msg, out elapsed);
-                      _btnTestDb.Enabled = true;
+            });
+
+            _btnTestDb.Enabled = true;
             if (ok)
             {
                 _lblDbStatus.Text = "● Status: Connected (Online)";

@@ -221,6 +221,15 @@
     <Compile Include="UI\Controls\ModernSearchBox.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="UI\Controls\ModernButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\Controls\ManagementStatCard.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\Controls\ModernComboBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="UI\Controls\NavItemButton.cs">
       <SubType>Component</SubType>
     </Compile>

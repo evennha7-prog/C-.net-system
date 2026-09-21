@@ -132,11 +132,43 @@ namespace assignment_code.UI
             object val = e.Value;
             string valStr = val?.ToString()?.Trim() ?? "";
 
-            // 1. Render Status Column as a Modern Rounded Pill Badge
+            // 1. Render Person Name Column with Initials Avatar (Users & Customers)
+            bool isPersonName = header.Equals("Full Name", StringComparison.OrdinalIgnoreCase) ||
+                                header.Equals("Customer Name", StringComparison.OrdinalIgnoreCase) ||
+                                header.Equals("Staff Name", StringComparison.OrdinalIgnoreCase) ||
+                                header.Equals(TranslationManager.T("FullName", "Full Name"), StringComparison.OrdinalIgnoreCase);
+
+            if (isPersonName && !string.IsNullOrEmpty(valStr))
+            {
+                e.PaintBackground(e.CellBounds, true);
+
+                int avatarSize = 28;
+                int avatarX = e.CellBounds.X + 12;
+                int avatarY = e.CellBounds.Y + (e.CellBounds.Height - avatarSize) / 2;
+                Rectangle avatarRect = new Rectangle(avatarX, avatarY, avatarSize, avatarSize);
+
+                GraphicsHelper.DrawInitialsAvatar(e.Graphics, avatarRect, valStr);
+
+                // Draw Name Text
+                int textX = avatarX + avatarSize + 10;
+                int textY = e.CellBounds.Y + (e.CellBounds.Height - FontHelper.CreateFont(9F, FontStyle.Bold).Height) / 2;
+                using (Font nameFont = FontHelper.CreateFont(9F, FontStyle.Bold))
+                using (SolidBrush textBrush = new SolidBrush(ThemeManager.TextPrimary))
+                {
+                    e.Graphics.DrawString(valStr, nameFont, textBrush, textX, textY);
+                }
+
+                e.Handled = true;
+                return;
+            }
+
+            // 2. Render Status, Tier, and Role Columns as Modern Rounded Pill Badges
             if (header.Equals("Status", StringComparison.OrdinalIgnoreCase) || 
                 header.Equals(TranslationManager.T("Status", "Status"), StringComparison.OrdinalIgnoreCase) ||
                 header.Equals("Tier", StringComparison.OrdinalIgnoreCase) ||
-                header.Equals(TranslationManager.T("Tier", "Tier"), StringComparison.OrdinalIgnoreCase))
+                header.Equals(TranslationManager.T("Tier", "Tier"), StringComparison.OrdinalIgnoreCase) ||
+                header.Equals("Role", StringComparison.OrdinalIgnoreCase) ||
+                header.Equals(TranslationManager.T("Role", "Role"), StringComparison.OrdinalIgnoreCase))
             {
                 e.PaintBackground(e.CellBounds, true);
 
@@ -153,7 +185,7 @@ namespace assignment_code.UI
                     int pillY = e.CellBounds.Y + (e.CellBounds.Height - pillHeight) / 2;
 
                     Rectangle pillRect = new Rectangle(pillX, pillY, pillWidth, pillHeight);
-                    using (GraphicsPath path = GraphicsHelper.GetRoundedRectanglePath(pillRect, 6))
+                    using (GraphicsPath path = GraphicsHelper.GetRoundedRectanglePath(pillRect, 12))
                     using (SolidBrush bgBrush = new SolidBrush(pillBg))
                     using (SolidBrush fgBrush = new SolidBrush(pillFg))
                     {
@@ -175,7 +207,7 @@ namespace assignment_code.UI
                 return;
             }
 
-            // 2. Render Action Buttons (Edit / Delete / View) as Flat Rounded Buttons
+            // 3. Render Action Buttons (Edit / Delete / View) as Flat Rounded Buttons
             var col = dgv.Columns[e.ColumnIndex];
             if (col is DataGridViewButtonColumn || IsActionColumn(header))
             {
@@ -224,7 +256,7 @@ namespace assignment_code.UI
 
                 GraphicsHelper.SetHighQuality(e.Graphics);
 
-                using (GraphicsPath path = GraphicsHelper.GetRoundedRectanglePath(btnRect, 6))
+                using (GraphicsPath path = GraphicsHelper.GetRoundedRectanglePath(btnRect, 7))
                 using (SolidBrush bgBrush = new SolidBrush(btnBg))
                 using (Pen borderPen = new Pen(btnBorder, 1f))
                 using (SolidBrush fgBrush = new SolidBrush(btnFg))
@@ -250,22 +282,42 @@ namespace assignment_code.UI
         {
             string s = status?.ToLowerInvariant() ?? "";
 
-            if (s.Contains("in stock") || s.Contains("active") || s.Contains("completed") || s.Contains("paid") || s.Contains("admin"))
+            if (s.Contains("administrator") || s.Contains("admin"))
+            {
+                bg = ThemeManager.IsDark ? Color.FromArgb(50, 30, 80) : Color.FromArgb(243, 232, 255);
+                fg = Color.FromArgb(147, 51, 234); // Purple
+            }
+            else if (s.Contains("store manager") || s.Contains("manager"))
+            {
+                bg = ThemeManager.IsDark ? Color.FromArgb(58, 42, 20) : Color.FromArgb(254, 243, 199);
+                fg = Color.FromArgb(217, 119, 6); // Amber
+            }
+            else if (s.Contains("cashier"))
+            {
+                bg = ThemeManager.IsDark ? Color.FromArgb(20, 45, 75) : Color.FromArgb(224, 242, 254);
+                fg = Color.FromArgb(2, 132, 199); // Sky
+            }
+            else if (s.Contains("vip") || s.Contains("platinum"))
+            {
+                bg = ThemeManager.IsDark ? Color.FromArgb(50, 30, 80) : Color.FromArgb(245, 235, 255);
+                fg = Color.FromArgb(139, 92, 246);
+            }
+            else if (s.Contains("in stock") || s.Contains("active") || s.Contains("completed") || s.Contains("paid"))
             {
                 bg = ThemeManager.SuccessGreenBg;
                 fg = ThemeManager.SuccessGreen;
             }
-            else if (s.Contains("low stock") || s.Contains("pending") || s.Contains("manager") || s.Contains("gold"))
+            else if (s.Contains("low stock") || s.Contains("pending") || s.Contains("gold"))
             {
                 bg = ThemeManager.WarningYellowBg;
                 fg = ThemeManager.WarningYellow;
             }
-            else if (s.Contains("out of stock") || s.Contains("cancelled") || s.Contains("inactive") || s.Contains("refunded"))
+            else if (s.Contains("out of stock") || s.Contains("cancelled") || s.Contains("inactive") || s.Contains("suspended") || s.Contains("refunded"))
             {
                 bg = ThemeManager.DangerRedBg;
                 fg = ThemeManager.DangerRed;
             }
-            else // Staff, Silver, Platinum, General
+            else // Regular, New, Silver, General
             {
                 bg = ThemeManager.IsDark ? Color.FromArgb(35, 45, 75) : Color.FromArgb(235, 242, 255);
                 fg = ThemeManager.AccentBlue;

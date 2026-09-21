@@ -571,6 +571,69 @@ namespace assignment_code.UI
                         g.DrawLine(pen, x + w - 5, y + h / 2f - 3, x + w - 2, y + h / 2f);
                         g.DrawLine(pen, x + w - 5, y + h / 2f + 3, x + w - 2, y + h / 2f);
                         break;
+
+                    case "plus":
+                    case "add":
+                        g.DrawLine(pen, x + w / 2f, y + 3, x + w / 2f, y + h - 3);
+                        g.DrawLine(pen, x + 3, y + h / 2f, x + w - 3, y + h / 2f);
+                        break;
+
+                    case "check":
+                        g.DrawLine(pen, x + 3, y + h * 0.52f, x + w * 0.42f, y + h - 3);
+                        g.DrawLine(pen, x + w * 0.42f, y + h - 3, x + w - 3, y + 3);
+                        break;
+
+                    case "filter":
+                        var filterPoints = new PointF[]
+                        {
+                            new PointF(x + 2, y + 3),
+                            new PointF(x + w - 2, y + 3),
+                            new PointF(x + w * 0.6f, y + h * 0.55f),
+                            new PointF(x + w * 0.6f, y + h - 2),
+                            new PointF(x + w * 0.4f, y + h - 2),
+                            new PointF(x + w * 0.4f, y + h * 0.55f)
+                        };
+                        g.DrawPolygon(pen, filterPoints);
+                        break;
+
+                    case "shield":
+                        var shieldPoints = new PointF[]
+                        {
+                            new PointF(x + 3, y + 3),
+                            new PointF(x + w - 3, y + 3),
+                            new PointF(x + w - 3, y + h * 0.55f),
+                            new PointF(x + w / 2f, y + h - 2),
+                            new PointF(x + 3, y + h * 0.55f)
+                        };
+                        g.DrawPolygon(pen, shieldPoints);
+                        break;
+
+                    case "star":
+                        var starPoints = new PointF[10];
+                        float rx = w / 2f;
+                        float ry = h / 2f;
+                        float cxS = x + rx;
+                        float cyS = y + ry;
+                        for (int s = 0; s < 10; s++)
+                        {
+                            float r = (s % 2 == 0) ? Math.Min(rx, ry) - 2 : (Math.Min(rx, ry) - 2) * 0.48f;
+                            double angle = s * Math.PI / 5.0 - Math.PI / 2.0;
+                            starPoints[s] = new PointF(cxS + (float)(Math.Cos(angle) * r), cyS + (float)(Math.Sin(angle) * r));
+                        }
+                        g.DrawPolygon(pen, starPoints);
+                        break;
+
+                    case "dollar":
+                    case "money":
+                        g.DrawLine(pen, x + w / 2f, y + 2, x + w / 2f, y + h - 2);
+                        g.DrawArc(pen, x + 4, y + 4, w - 8, (h - 8) / 2f, 90, 180);
+                        g.DrawArc(pen, x + 4, y + h / 2f - 2, w - 8, (h - 8) / 2f, 270, 180);
+                        break;
+
+                    case "phone":
+                        g.DrawRectangle(pen, x + 4, y + 2, w - 8, h - 4);
+                        g.DrawLine(pen, x + 7, y + h - 5, x + w - 7, y + h - 5);
+                        break;
                 }
             }
         }
@@ -612,6 +675,65 @@ namespace assignment_code.UI
             using (var pen = new Pen(Color.FromArgb(220, 230, 245), 1.5f))
             {
                 g.DrawEllipse(pen, bounds);
+            }
+        }
+
+        private static readonly Color[] AvatarPalette = new[]
+        {
+            Color.FromArgb(99, 102, 241),  // Indigo
+            Color.FromArgb(16, 185, 129),  // Emerald
+            Color.FromArgb(245, 158, 11),  // Amber
+            Color.FromArgb(239, 68, 68),   // Rose
+            Color.FromArgb(139, 92, 246),  // Purple
+            Color.FromArgb(14, 165, 233),  // Sky
+            Color.FromArgb(236, 72, 153),  // Pink
+            Color.FromArgb(20, 184, 166),  // Teal
+        };
+
+        public static void DrawInitialsAvatar(Graphics g, Rectangle bounds, string name, Color? customBg = null)
+        {
+            SetHighQuality(g);
+            string initials = "??";
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                var parts = name.Trim().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length >= 2)
+                {
+                    initials = $"{char.ToUpper(parts[0][0])}{char.ToUpper(parts[1][0])}";
+                }
+                else if (parts.Length == 1 && parts[0].Length >= 2)
+                {
+                    initials = parts[0].Substring(0, 2).ToUpper();
+                }
+                else if (parts.Length == 1 && parts[0].Length == 1)
+                {
+                    initials = parts[0].ToUpper();
+                }
+            }
+
+            int hash = Math.Abs((name ?? "").GetHashCode());
+            Color bg = customBg ?? AvatarPalette[hash % AvatarPalette.Length];
+
+            using (var brush = new SolidBrush(bg))
+            {
+                g.FillEllipse(brush, bounds);
+            }
+
+            // Subtle border
+            using (var pen = new Pen(Color.FromArgb(60, 255, 255, 255), 1.2f))
+            {
+                g.DrawEllipse(pen, bounds);
+            }
+
+            using (var font = FontHelper.CreateFont(Math.Max(7.5f, bounds.Height * 0.36f), FontStyle.Bold))
+            using (var textBrush = new SolidBrush(Color.White))
+            {
+                var sf = new StringFormat
+                {
+                    Alignment = StringAlignment.Center,
+                    LineAlignment = StringAlignment.Center
+                };
+                g.DrawString(initials, font, textBrush, bounds, sf);
             }
         }
     }
