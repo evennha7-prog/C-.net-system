@@ -392,11 +392,27 @@ namespace assignment_code.UI.Views
             Invalidate(true);
         }
 
+        protected override void OnVisibleChanged(EventArgs e)
+        {
+            base.OnVisibleChanged(e);
+            if (Visible)
+            {
+                RepositionContent();
+            }
+        }
+
+        protected override void OnResize(EventArgs e)
+        {
+            base.OnResize(e);
+            RepositionContent();
+        }
+
         private void RepositionContent()
         {
             if (_contentWrapper == null || _headerPanel == null) return;
 
-            int containerW = Math.Max(720, ClientSize.Width);
+            int containerW = Math.Max(720, Math.Max(ClientSize.Width, Parent != null ? Parent.ClientSize.Width : 0));
+            _contentWrapper.Location = new Point(0, 0);
             _contentWrapper.Width = containerW;
 
             int gap = 14;

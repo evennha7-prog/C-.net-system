@@ -194,10 +194,20 @@ namespace assignment_code.UI.Views
             Invalidate(true);
         }
 
+        protected override void OnVisibleChanged(EventArgs e)
+        {
+            base.OnVisibleChanged(e);
+            if (Visible)
+            {
+                RepositionContent();
+            }
+        }
+
         private void RepositionContent()
         {
             if (_contentWrapper == null) return;
-            int w = Math.Max(700, ClientSize.Width);
+            int w = Math.Max(700, Math.Max(ClientSize.Width, Parent != null ? Parent.ClientSize.Width : 0));
+            _contentWrapper.Location = new Point(0, 0);
             _contentWrapper.Width = w;
 
             int startY = 14;

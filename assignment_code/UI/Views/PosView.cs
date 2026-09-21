@@ -654,11 +654,20 @@ namespace assignment_code.UI.Views
             Invalidate(true);
         }
 
+        protected override void OnVisibleChanged(EventArgs e)
+        {
+            base.OnVisibleChanged(e);
+            if (Visible)
+            {
+                RepositionContent();
+            }
+        }
+
         private void RepositionContent()
         {
-            int totalW = ClientSize.Width;
-            int totalH = ClientSize.Height;
-            if (totalW < 600) return;
+            int totalW = Math.Max(ClientSize.Width, Parent != null ? Parent.ClientSize.Width : 0);
+            int totalH = Math.Max(ClientSize.Height, Parent != null ? Parent.ClientSize.Height : 0);
+            if (totalW < 400) return;
 
             int rightW = Math.Max(320, (int)(totalW * 0.30f));
             int leftW = totalW - rightW - 18;

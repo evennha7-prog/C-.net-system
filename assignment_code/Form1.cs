@@ -116,6 +116,16 @@ namespace assignment_code
                 _settingsView
             });
 
+            foreach (Control v in new Control[]
+            {
+                _dashboardView, _productsView, _categoriesView, _posView,
+                _salesListView, _ordersView, _customersView, _usersView,
+                _reportsView, _appearanceView, _settingsView
+            })
+            {
+                v.Bounds = _viewsContainer.ClientRectangle;
+            }
+
             _activeView = _dashboardView;
 
             ResumeLayout(true);
@@ -142,9 +152,12 @@ namespace assignment_code
 
         private void ShowView(Control targetView)
         {
-            if (targetView == null || _activeView == targetView) return;
+            if (targetView == null) return;
 
             _viewsContainer.SuspendLayout();
+
+            targetView.Dock = DockStyle.Fill;
+            targetView.Bounds = _viewsContainer.ClientRectangle;
             targetView.Visible = true;
             targetView.BringToFront();
 
@@ -154,7 +167,10 @@ namespace assignment_code
             }
 
             _activeView = targetView;
-            _viewsContainer.ResumeLayout(false);
+
+            _viewsContainer.ResumeLayout(true);
+            _viewsContainer.PerformLayout();
+            targetView.PerformLayout();
 
             (targetView as IRefreshableView)?.RefreshView();
         }
