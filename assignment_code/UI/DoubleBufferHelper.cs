@@ -30,6 +30,13 @@ namespace assignment_code.UI
             }
             catch { }
 
+            // CRITICAL: NEVER set UserPaint on TextBoxBase, ComboBox, or native EDIT controls!
+            // Setting UserPaint on a TextBox disables native Windows message handling and hides all text.
+            if (control is TextBoxBase || control is ComboBox || control is ListBox)
+            {
+                return;
+            }
+
             try
             {
                 MethodInfo setStyleMethod = typeof(Control).GetMethod("SetStyle", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -37,8 +44,7 @@ namespace assignment_code.UI
                 {
                     setStyleMethod.Invoke(control, new object[] {
                         ControlStyles.OptimizedDoubleBuffer |
-                        ControlStyles.AllPaintingInWmPaint |
-                        ControlStyles.UserPaint,
+                        ControlStyles.AllPaintingInWmPaint,
                         true
                     });
                 }

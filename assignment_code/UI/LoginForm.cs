@@ -49,15 +49,7 @@ namespace assignment_code.UI
         private static readonly Color BorderNormal = Color.FromArgb(226, 232, 240);    // #E2E8F0
         private static readonly Color BorderFocused = Color.FromArgb(37, 99, 235);     // #2563EB
 
-        protected override CreateParams CreateParams
-        {
-            get
-            {
-                CreateParams cp = base.CreateParams;
-                cp.ExStyle |= 0x02000000; // WS_EX_COMPOSITED
-                return cp;
-            }
-        }
+
 
         public LoginForm()
         {
