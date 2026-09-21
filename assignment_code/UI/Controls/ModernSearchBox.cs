@@ -106,8 +106,16 @@ namespace assignment_code.UI.Controls
 
             if (_isHeaderStyle)
             {
-                _innerTextBox.BackColor = Color.White;
-                _innerTextBox.ForeColor = Color.FromArgb(15, 23, 42);
+                if (ThemeManager.IsDark)
+                {
+                    _innerTextBox.BackColor = Color.FromArgb(20, 36, 70);
+                    _innerTextBox.ForeColor = Color.White;
+                }
+                else
+                {
+                    _innerTextBox.BackColor = Color.White;
+                    _innerTextBox.ForeColor = Color.FromArgb(15, 23, 42);
+                }
             }
             else
             {
@@ -146,15 +154,45 @@ namespace assignment_code.UI.Controls
             Graphics g = e.Graphics;
             GraphicsHelper.SetHighQuality(g);
 
+            // Clear parent background
+            Color parentBg = (Parent != null && Parent.BackColor != Color.Transparent) ? Parent.BackColor : ThemeManager.Background;
+            using (var parentBrush = new SolidBrush(parentBg))
+            {
+                g.FillRectangle(parentBrush, ClientRectangle);
+            }
+
             Rectangle rect = new Rectangle(0, 0, Width - 1, Height - 1);
             if (rect.Width <= 0 || rect.Height <= 0) return;
 
-            Color bgCol = _isHeaderStyle ? Color.White : ThemeManager.SearchBoxBackground;
-            Color borderCol = _isHeaderStyle 
-                ? (_isFocused ? Color.FromArgb(37, 99, 235) : Color.FromArgb(219, 234, 254))
-                : (_isFocused ? ThemeManager.AccentBlue : ThemeManager.SearchBoxBorder);
-            Color iconCol = _isHeaderStyle ? Color.FromArgb(37, 99, 235) : ThemeManager.TextMuted;
-            Color placeCol = _isHeaderStyle ? Color.FromArgb(148, 163, 184) : ThemeManager.TextMuted;
+            Color bgCol;
+            Color borderCol;
+            Color iconCol;
+            Color placeCol;
+
+            if (_isHeaderStyle)
+            {
+                if (ThemeManager.IsDark)
+                {
+                    bgCol = Color.FromArgb(20, 36, 70);
+                    borderCol = _isFocused ? Color.FromArgb(96, 165, 250) : Color.FromArgb(45, 75, 130);
+                    iconCol = Color.FromArgb(147, 197, 253);
+                    placeCol = Color.FromArgb(148, 163, 184);
+                }
+                else
+                {
+                    bgCol = Color.White;
+                    borderCol = _isFocused ? Color.FromArgb(37, 99, 235) : Color.FromArgb(219, 234, 254);
+                    iconCol = Color.FromArgb(37, 99, 235);
+                    placeCol = Color.FromArgb(148, 163, 184);
+                }
+            }
+            else
+            {
+                bgCol = ThemeManager.SearchBoxBackground;
+                borderCol = _isFocused ? ThemeManager.AccentBlue : ThemeManager.SearchBoxBorder;
+                iconCol = ThemeManager.TextMuted;
+                placeCol = ThemeManager.TextMuted;
+            }
 
             using (GraphicsPath path = GraphicsHelper.GetRoundedRectanglePath(rect, _borderRadius))
             {

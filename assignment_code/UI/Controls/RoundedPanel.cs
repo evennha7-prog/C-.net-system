@@ -78,6 +78,13 @@ namespace assignment_code.UI.Controls
             Graphics g = e.Graphics;
             GraphicsHelper.SetHighQuality(g);
 
+            // Paint parent background first to eliminate white corner artifacts
+            Color parentBg = (Parent != null && Parent.BackColor != Color.Transparent) ? Parent.BackColor : ThemeManager.Background;
+            using (var parentBrush = new SolidBrush(parentBg))
+            {
+                g.FillRectangle(parentBrush, ClientRectangle);
+            }
+
             Color currentFill = _useThemeColors ? ThemeManager.CardBackground : _fillColor;
             Color currentBorder = _useThemeColors ? ThemeManager.BorderColor : _borderColor;
 

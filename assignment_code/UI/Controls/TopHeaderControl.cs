@@ -179,6 +179,13 @@ namespace assignment_code.UI.Controls
             Graphics g = e.Graphics;
             GraphicsHelper.SetHighQuality(g);
 
+            // Clear parent background
+            Color parentBg = (Parent != null && Parent.BackColor != Color.Transparent) ? Parent.BackColor : ThemeManager.Background;
+            using (var parentBrush = new SolidBrush(parentBg))
+            {
+                g.FillRectangle(parentBrush, ClientRectangle);
+            }
+
             Rectangle cardBounds = new Rectangle(0, 0, Width - 1, Height - 1);
             if (cardBounds.Width <= 0 || cardBounds.Height <= 0) return;
 

@@ -239,6 +239,7 @@ namespace assignment_code
         {
             BackColor = ThemeManager.Background;
             if (_mainContainer != null) _mainContainer.BackColor = ThemeManager.Background;
+            if (_sidebar != null) _sidebar.BackColor = ThemeManager.SidebarBackground;
             Invalidate(true);
         }
 

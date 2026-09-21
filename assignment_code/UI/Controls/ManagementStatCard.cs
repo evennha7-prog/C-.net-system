@@ -83,6 +83,13 @@ namespace assignment_code.UI.Controls
             Rectangle cardRect = new Rectangle(0, 0, Width - 1, Height - 1);
             if (cardRect.Width <= 0 || cardRect.Height <= 0) return;
 
+            // 0. Paint parent background first
+            Color parentBg = (Parent != null && Parent.BackColor != Color.Transparent) ? Parent.BackColor : ThemeManager.Background;
+            using (var parentBrush = new SolidBrush(parentBg))
+            {
+                g.FillRectangle(parentBrush, ClientRectangle);
+            }
+
             // 1. Background & Border
             using (GraphicsPath path = GraphicsHelper.GetRoundedRectanglePath(cardRect, _borderRadius))
             {

@@ -112,19 +112,50 @@ namespace assignment_code.UI.Controls
             Graphics g = e.Graphics;
             GraphicsHelper.SetHighQuality(g);
 
+            // 0. Paint parent background first
+            Color parentBg = (Parent != null && Parent.BackColor != Color.Transparent) ? Parent.BackColor : ThemeManager.SidebarBackground;
+            using (var parentBrush = new SolidBrush(parentBg))
+            {
+                g.FillRectangle(parentBrush, ClientRectangle);
+            }
+
             Rectangle rect = new Rectangle(0, 0, Width - 1, Height - 1);
             if (rect.Width <= 0 || rect.Height <= 0) return;
 
-            int pillRadius = _isSubItem ? 12 : _borderRadius;
+            int pillRadius = _isSubItem ? 8 : _borderRadius;
 
             // Draw Background Pill
             if (_isActive)
             {
-                Color activeBg = _isDangerAction ? ThemeManager.DangerRed : ThemeManager.AccentBlue;
+                Color activeBg = _isDangerAction 
+                    ? ThemeManager.DangerRed 
+                    : (ThemeManager.IsDark ? Color.FromArgb(32, 50, 94) : Color.FromArgb(235, 243, 255));
+                Color activeBorder = _isDangerAction 
+                    ? ThemeManager.DangerRed 
+                    : (ThemeManager.IsDark ? Color.FromArgb(55, 85, 160) : Color.FromArgb(200, 222, 255));
+
                 using (GraphicsPath path = GraphicsHelper.GetRoundedRectanglePath(rect, pillRadius))
-                using (SolidBrush brush = new SolidBrush(activeBg))
                 {
-                    g.FillPath(brush, path);
+                    using (SolidBrush brush = new SolidBrush(activeBg))
+                    {
+                        g.FillPath(brush, path);
+                    }
+                    using (Pen pen = new Pen(activeBorder, 1f))
+                    {
+                        pen.Alignment = PenAlignment.Inset;
+                        g.DrawPath(pen, path);
+                    }
+                }
+
+                // Left Accent Indicator Line
+                if (!_isSubItem && !_isDangerAction)
+                {
+                    Rectangle indRect = new Rectangle(3, (Height - 18) / 2, 3, 18);
+                    using (GraphicsPath indPath = GraphicsHelper.GetRoundedRectanglePath(indRect, 2))
+                    using (SolidBrush indBrush = new SolidBrush(ThemeManager.AccentBlue))
+                    {
+                        g.FillPath(indBrush, indPath);
+                    }
                 }
             }
             else if (_isHovered)
@@ -145,8 +176,16 @@ namespace assignment_code.UI.Controls
 
             if (_isActive)
             {
-                iconColor = Color.White;
-                textColor = Color.White;
+                if (_isDangerAction)
+                {
+                    iconColor = Color.White;
+                    textColor = Color.White;
+                }
+                else
+                {
+                    iconColor = ThemeManager.IsDark ? Color.FromArgb(147, 197, 253) : ThemeManager.AccentBlue;
+                    textColor = ThemeManager.IsDark ? Color.FromArgb(240, 246, 255) : ThemeManager.AccentBlue;
+                }
             }
             else if (_isDangerAction)
             {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Linq;
 using System.Windows.Forms;
 using assignment_code.Models;
 using assignment_code.Services;
@@ -17,8 +18,7 @@ namespace assignment_code.UI.Controls
         private int _hoveredIndex = -1;
         private Rectangle _periodButtonRect;
         private int _borderRadius = 16;
-        private SplineChartControl splineChartControl1;
-        private double _maxAxisValue = 50;
+        private double _maxAxisValue = 20;
 
         public event EventHandler<string> PeriodChanged;
 
@@ -54,6 +54,22 @@ namespace assignment_code.UI.Controls
         {
             _data = data ?? new List<BarChartPoint>();
             _selectedPeriod = period;
+
+            // Dynamically scale max axis value for optimal visual proportions
+            if (_data.Count > 0)
+            {
+                double maxVal = _data.Max(p => p.Value);
+                if (maxVal <= 5) _maxAxisValue = 10;
+                else if (maxVal <= 10) _maxAxisValue = 15;
+                else if (maxVal <= 25) _maxAxisValue = 30;
+                else if (maxVal <= 50) _maxAxisValue = 60;
+                else _maxAxisValue = Math.Ceiling(maxVal * 1.25 / 10.0) * 10;
+            }
+            else
+            {
+                _maxAxisValue = 20;
+            }
+
             Invalidate();
         }
 
@@ -64,7 +80,6 @@ namespace assignment_code.UI.Controls
             int previousHover = _hoveredIndex;
             _hoveredIndex = -1;
 
-            // Check if hovering over period button
             if (_periodButtonRect.Contains(e.Location))
             {
                 Cursor = Cursors.Hand;
@@ -74,10 +89,9 @@ namespace assignment_code.UI.Controls
                 Cursor = Cursors.Default;
             }
 
-            // Check bar hit testing
             int paddingLeft = 45;
             int paddingRight = 20;
-            int chartTop = 110;
+            int chartTop = 100;
             int chartBottom = Height - 35;
             int plotWidth = Width - paddingLeft - paddingRight;
 
@@ -109,7 +123,6 @@ namespace assignment_code.UI.Controls
             base.OnMouseClick(e);
             if (_periodButtonRect.Contains(e.Location))
             {
-                // Toggle period or show menu
                 var menu = new ContextMenuStrip();
                 var item1 = menu.Items.Add("6 months");
                 var item2 = menu.Items.Add("12 months");
@@ -136,6 +149,13 @@ namespace assignment_code.UI.Controls
             Graphics g = e.Graphics;
             GraphicsHelper.SetHighQuality(g);
 
+            // 0. Paint parent background first to eliminate white corner artifacts
+            Color parentBg = (Parent != null && Parent.BackColor != Color.Transparent) ? Parent.BackColor : ThemeManager.Background;
+            using (var parentBrush = new SolidBrush(parentBg))
+            {
+                g.FillRectangle(parentBrush, ClientRectangle);
+            }
+
             Rectangle cardBounds = new Rectangle(0, 0, Width - 1, Height - 1);
             if (cardBounds.Width <= 0 || cardBounds.Height <= 0) return;
 
@@ -147,7 +167,7 @@ namespace assignment_code.UI.Controls
                     g.FillPath(bgBrush, cardPath);
                 }
 
-                using (Pen borderPen = new Pen(ThemeManager.BorderColor, 1f))
+                using (Pen borderPen = new Pen(ThemeManager.BorderColor, 1.2f))
                 {
                     borderPen.Alignment = PenAlignment.Inset;
                     g.DrawPath(borderPen, cardPath);
@@ -156,14 +176,14 @@ namespace assignment_code.UI.Controls
 
             int padding = 20;
 
-            // 2. Header: Title ("Post Growth")
-            using (Font titleFont = FontHelper.CreateFontForText(_title, 12F, FontStyle.Bold))
+            // 2. Header: Title
+            using (Font titleFont = FontHelper.CreateFontForText(_title, 11F, FontStyle.Bold))
             using (SolidBrush titleBrush = new SolidBrush(ThemeManager.TextPrimary))
             {
                 g.DrawString(_title, titleFont, titleBrush, padding, padding);
             }
 
-            // 3. Period Dropdown Button ("6 months ∨")
+            // 3. Period Dropdown Pill ("6 months ▾")
             string periodText = _selectedPeriod + "  ▾";
             using (Font periodFont = FontHelper.CreateFont(8.5F, FontStyle.Regular))
             {
@@ -198,34 +218,33 @@ namespace assignment_code.UI.Controls
                 }
             }
 
-            // 4. Legend: Blue square + "Total number of posts"
-            int legendY = padding + 32;
-            int sqSize = 10;
-            Rectangle sqRect = new Rectangle(padding, legendY + 3, sqSize, sqSize);
-            using (GraphicsPath sqPath = GraphicsHelper.GetRoundedRectanglePath(sqRect, 2))
-            using (SolidBrush sqBrush = new SolidBrush(ThemeManager.AccentBlue))
+            // 4. Legend: Indigo dot + "Total number of products"
+            int legendY = padding + 28;
+            int dotSize = 8;
+            Rectangle dotRect = new Rectangle(padding, legendY + 4, dotSize, dotSize);
+            using (SolidBrush dotBrush = new SolidBrush(Color.FromArgb(99, 102, 241)))
             {
-                g.FillPath(sqBrush, sqPath);
+                g.FillEllipse(dotBrush, dotRect);
             }
 
             string legendText = TranslationManager.T("Total number of products", "Total number of products");
-            using (Font legendFont = FontHelper.CreateFontForText(legendText, 8.75F, FontStyle.Regular))
+            using (Font legendFont = FontHelper.CreateFontForText(legendText, 8.5F, FontStyle.Regular))
             using (SolidBrush legendBrush = new SolidBrush(ThemeManager.TextSecondary))
             {
-                g.DrawString(legendText, legendFont, legendBrush, padding + sqSize + 8, legendY);
+                g.DrawString(legendText, legendFont, legendBrush, padding + dotSize + 6, legendY);
             }
 
-            // 5. Chart Grid & Plot
+            // 5. Chart Grid & Plot Area
             int chartLeft = 45;
             int chartRight = Width - 20;
-            int chartTop = 95;
+            int chartTop = 85;
             int chartBottom = Height - 35;
             int plotH = chartBottom - chartTop;
             int plotW = chartRight - chartLeft;
 
-            // Y-Axis labels and horizontal dashed lines (0, 10, 20, 30, 40, 50)
-            int ySteps = 5;
-            using (Font axisFont = FontHelper.CreateFont(8.25F, FontStyle.Regular))
+            // Y-Axis labels and horizontal dashed lines
+            int ySteps = 4;
+            using (Font axisFont = FontHelper.CreateFont(8F, FontStyle.Regular))
             using (SolidBrush axisBrush = new SolidBrush(ThemeManager.TextMuted))
             using (Pen gridPen = new Pen(ThemeManager.GridLineColor, 1f) { DashStyle = DashStyle.Dash, DashPattern = new float[] { 3, 3 } })
             {
@@ -234,27 +253,25 @@ namespace assignment_code.UI.Controls
                     int val = (int)(_maxAxisValue * i / ySteps);
                     float y = chartBottom - (float)i / ySteps * plotH;
 
-                    // Label
                     string label = val.ToString();
                     SizeF s = g.MeasureString(label, axisFont);
                     g.DrawString(label, axisFont, axisBrush, chartLeft - s.Width - 8, y - s.Height / 2f);
 
-                    // Dashed gridline
                     g.DrawLine(gridPen, chartLeft, y, chartRight, y);
                 }
             }
 
             if (_data == null || _data.Count == 0) return;
 
-            // 6. Draw Bars
+            // 6. Draw Gradient Capsule Bars
             float slotWidth = (float)plotW / _data.Count;
-            float barWidth = Math.Min(34f, slotWidth * 0.48f);
+            float barWidth = Math.Min(32f, slotWidth * 0.52f);
 
             int tooltipIndexToDraw = -1;
             PointF tooltipPoint = PointF.Empty;
             string tooltipString = "";
 
-            using (Font xFont = FontHelper.CreateFont(8.5F, FontStyle.Regular))
+            using (Font xFont = FontHelper.CreateFont(8.25F, FontStyle.Regular))
             using (SolidBrush xBrush = new SolidBrush(ThemeManager.TextSecondary))
             {
                 for (int i = 0; i < _data.Count; i++)
@@ -262,28 +279,32 @@ namespace assignment_code.UI.Controls
                     var pt = _data[i];
                     float centerX = chartLeft + i * slotWidth + slotWidth / 2f;
                     float barHeight = (float)(pt.Value / _maxAxisValue * plotH);
+                    barHeight = Math.Max(4f, barHeight); // minimum height so bars are always visible
                     float barX = centerX - barWidth / 2f;
                     float barY = chartBottom - barHeight;
 
                     bool isHighlighted = pt.IsHighlighted || (i == _hoveredIndex);
 
-                    Color barColor = isHighlighted ? ThemeManager.BarActive : ThemeManager.BarLight;
-
-                    // Draw rounded bar
                     RectangleF barRect = new RectangleF(barX, barY, barWidth, barHeight);
-                    if (barHeight > 4)
+                    Rectangle intRect = Rectangle.Round(barRect);
+
+                    if (isHighlighted)
                     {
-                        using (GraphicsPath barPath = GraphicsHelper.GetRoundedRectanglePath(Rectangle.Round(barRect), 6))
-                        using (SolidBrush barBrush = new SolidBrush(barColor))
+                        Color topCol = Color.FromArgb(99, 102, 241);
+                        Color botCol = Color.FromArgb(59, 130, 246);
+                        using (LinearGradientBrush barBrush = new LinearGradientBrush(intRect, topCol, botCol, LinearGradientMode.Vertical))
+                        using (GraphicsPath barPath = GraphicsHelper.GetRoundedRectanglePath(intRect, 6))
                         {
                             g.FillPath(barBrush, barPath);
                         }
                     }
                     else
                     {
-                        using (SolidBrush barBrush = new SolidBrush(barColor))
+                        Color barCol = ThemeManager.IsDark ? Color.FromArgb(42, 54, 88) : Color.FromArgb(218, 228, 247);
+                        using (SolidBrush barBrush = new SolidBrush(barCol))
+                        using (GraphicsPath barPath = GraphicsHelper.GetRoundedRectanglePath(intRect, 6))
                         {
-                            g.FillRectangle(barBrush, barRect);
+                            g.FillPath(barBrush, barPath);
                         }
                     }
 
@@ -291,36 +312,34 @@ namespace assignment_code.UI.Controls
                     SizeF xSize = g.MeasureString(pt.Label, xFont);
                     g.DrawString(pt.Label, xFont, xBrush, centerX - xSize.Width / 2f, chartBottom + 6);
 
-                    // Check if should record tooltip
+                    // Record tooltip
                     if (isHighlighted && (!string.IsNullOrEmpty(pt.TooltipText) || i == _hoveredIndex))
                     {
                         tooltipIndexToDraw = i;
                         tooltipPoint = new PointF(centerX, barY);
-                        tooltipString = !string.IsNullOrEmpty(pt.TooltipText) ? pt.TooltipText : $"{pt.Value} products";
+                        tooltipString = !string.IsNullOrEmpty(pt.TooltipText) ? pt.TooltipText : $"{pt.Value} items";
                     }
                 }
             }
 
-            // 7. Draw Tooltip if active
+            // 7. Draw Floating Tooltip
             if (tooltipIndexToDraw >= 0 && !string.IsNullOrEmpty(tooltipString))
             {
-                using (Font ttFont = FontHelper.CreateFont(8.25F, FontStyle.Bold))
+                using (Font ttFont = FontHelper.CreateFont(8F, FontStyle.Bold))
                 {
                     SizeF ttSize = g.MeasureString(tooltipString, ttFont);
-                    int ttW = (int)ttSize.Width + 16;
+                    int ttW = (int)ttSize.Width + 18;
                     int ttH = 24;
                     int ttX = (int)(tooltipPoint.X - ttW / 2f);
-                    int ttY = (int)(tooltipPoint.Y - ttH - 7);
+                    int ttY = (int)(tooltipPoint.Y - ttH - 8);
 
                     Rectangle ttRect = new Rectangle(ttX, ttY, ttW, ttH);
 
-                    // Dark pill container
                     using (GraphicsPath ttPath = GraphicsHelper.GetRoundedRectanglePath(ttRect, 6))
                     using (SolidBrush ttBg = new SolidBrush(ThemeManager.DarkTooltipBg))
                     {
                         g.FillPath(ttBg, ttPath);
 
-                        // Down pointer triangle
                         PointF[] triangle = new PointF[]
                         {
                             new PointF(tooltipPoint.X - 5, ttRect.Bottom),
@@ -341,25 +360,6 @@ namespace assignment_code.UI.Controls
                     }
                 }
             }
-        }
-
-        private void InitializeComponent()
-        {
-            this.splineChartControl1 = new assignment_code.UI.Controls.SplineChartControl();
-            this.SuspendLayout();
-            // 
-            // splineChartControl1
-            // 
-            this.splineChartControl1.BackColor = System.Drawing.Color.Transparent;
-            this.splineChartControl1.Location = new System.Drawing.Point(0, 0);
-            this.splineChartControl1.Name = "splineChartControl1";
-            this.splineChartControl1.SelectedPeriod = "Last 15 days";
-            this.splineChartControl1.Size = new System.Drawing.Size(420, 260);
-            this.splineChartControl1.TabIndex = 0;
-            this.splineChartControl1.Text = "splineChartControl1";
-            this.splineChartControl1.Title = "Reports Trend";
-            this.ResumeLayout(false);
-
         }
     }
 }

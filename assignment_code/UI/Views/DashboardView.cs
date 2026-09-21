@@ -21,14 +21,28 @@ namespace assignment_code.UI.Views
             InitializeComponent();
             SetupEventHandlers();
             BindInitialData();
-            ThemeManager.ThemeChanged += (s, e) => Invalidate(true);
+            ApplyTheme();
+            ThemeManager.ThemeChanged += (s, e) =>
+            {
+                ApplyTheme();
+                Invalidate(true);
+            };
             StoreDataService.Instance.DataRefreshed += (s, e) => RefreshView();
             TranslationManager.LanguageChanged += (s, e) =>
             {
                 _barChartPostGrowth.Title = TranslationManager.T("ProductGrowth", "Product Growth");
-                _splineChartCommentsTrend.Title = TranslationManager.T("ReportsTrend", "Reports Trend");
+                _splineChartCommentsTrend.Title = TranslationManager.T("SalesOrderTrends", "Sales & Order Trends");
                 RefreshView();
             };
+        }
+
+        private void ApplyTheme()
+        {
+            BackColor = ThemeManager.Background;
+            if (_contentWrapper != null)
+            {
+                _contentWrapper.BackColor = ThemeManager.Background;
+            }
         }
 
         private void SetupEventHandlers()

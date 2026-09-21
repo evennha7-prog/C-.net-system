@@ -14,7 +14,6 @@ namespace assignment_code.UI.Controls
         private List<CommentItem> _comments = new List<CommentItem>();
         private int _borderRadius = 16;
         private int _hoveredRow = -1;
-        private int _hoveredBtnIndex = -1;
 
         public event EventHandler<CommentItem> ViewCommentClicked;
 
@@ -27,7 +26,7 @@ namespace assignment_code.UI.Controls
                      ControlStyles.SupportsTransparentBackColor, true);
 
             BackColor = Color.Transparent;
-            Size = new Size(420, 240);
+            Size = new Size(550, 240);
 
             ThemeManager.ThemeChanged += (s, e) => Invalidate();
         }
@@ -41,36 +40,23 @@ namespace assignment_code.UI.Controls
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
-            int headerH = 80;
+            int headerH = 76;
             int rowH = 36;
 
             int prevRow = _hoveredRow;
-            int prevBtn = _hoveredBtnIndex;
-
             _hoveredRow = -1;
-            _hoveredBtnIndex = -1;
 
-            int col4X = Width - 20 - 55;
-
-            if (e.Y >= headerH)
+            if (e.Y >= headerH && _comments.Count > 0)
             {
                 int idx = (e.Y - headerH) / rowH;
                 if (idx >= 0 && idx < _comments.Count)
                 {
                     _hoveredRow = idx;
-
-                    // Check if hovering specifically over the View button
-                    int rowY = 82 + (idx * rowH);
-                    Rectangle btnRect = new Rectangle(col4X, rowY - 2, 50, 24);
-                    if (btnRect.Contains(e.Location))
-                    {
-                        _hoveredBtnIndex = idx;
-                        Cursor = Cursors.Hand;
-                    }
-                    else
-                    {
-                        Cursor = Cursors.Default;
-                    }
+                    Cursor = Cursors.Hand;
+                }
+                else
+                {
+                    Cursor = Cursors.Default;
                 }
             }
             else
@@ -78,7 +64,7 @@ namespace assignment_code.UI.Controls
                 Cursor = Cursors.Default;
             }
 
-            if (prevRow != _hoveredRow || prevBtn != _hoveredBtnIndex)
+            if (prevRow != _hoveredRow)
                 Invalidate();
         }
 
@@ -86,16 +72,16 @@ namespace assignment_code.UI.Controls
         {
             base.OnMouseLeave(e);
             _hoveredRow = -1;
-            _hoveredBtnIndex = -1;
+            Cursor = Cursors.Default;
             Invalidate();
         }
 
         protected override void OnMouseClick(MouseEventArgs e)
         {
             base.OnMouseClick(e);
-            if (_hoveredBtnIndex >= 0 && _hoveredBtnIndex < _comments.Count)
+            if (_hoveredRow >= 0 && _hoveredRow < _comments.Count)
             {
-                ViewCommentClicked?.Invoke(this, _comments[_hoveredBtnIndex]);
+                ViewCommentClicked?.Invoke(this, _comments[_hoveredRow]);
             }
         }
 
@@ -104,6 +90,13 @@ namespace assignment_code.UI.Controls
             base.OnPaint(e);
             Graphics g = e.Graphics;
             GraphicsHelper.SetHighQuality(g);
+
+            // 0. Paint parent background first to eliminate white corner artifacts
+            Color parentBg = (Parent != null && Parent.BackColor != Color.Transparent) ? Parent.BackColor : ThemeManager.Background;
+            using (var parentBrush = new SolidBrush(parentBg))
+            {
+                g.FillRectangle(parentBrush, ClientRectangle);
+            }
 
             Rectangle cardBounds = new Rectangle(0, 0, Width - 1, Height - 1);
             if (cardBounds.Width <= 0 || cardBounds.Height <= 0) return;
@@ -116,7 +109,7 @@ namespace assignment_code.UI.Controls
                     g.FillPath(bgBrush, cardPath);
                 }
 
-                using (Pen borderPen = new Pen(ThemeManager.BorderColor, 1f))
+                using (Pen borderPen = new Pen(ThemeManager.BorderColor, 1.2f))
                 {
                     borderPen.Alignment = PenAlignment.Inset;
                     g.DrawPath(borderPen, cardPath);
@@ -125,57 +118,92 @@ namespace assignment_code.UI.Controls
 
             int padding = 20;
 
-            // 2. Title ("Recent Reports")
-            string titleText = TranslationManager.T("RecentReports", "Recent Reports");
-            using (Font titleFont = FontHelper.CreateFontForText(titleText, 12F, FontStyle.Bold))
+            // 2. Title ("Recent Transactions")
+            string titleText = TranslationManager.T("RecentTransactions", "Recent Transactions");
+            using (Font titleFont = FontHelper.CreateFontForText(titleText, 11F, FontStyle.Bold))
             using (SolidBrush titleBrush = new SolidBrush(ThemeManager.TextPrimary))
             {
                 g.DrawString(titleText, titleFont, titleBrush, padding, padding);
             }
 
             // 3. Table Column Headers
-            int colHeaderY = 54;
+            int colHeaderY = 50;
             int col1X = padding;
-            int col2X = (int)(Width * 0.22f);
+            int col2X = (int)(Width * 0.38f);
             int col3X = (int)(Width * 0.72f);
-            int col4X = Width - padding - 50;
 
-            string hAuth = TranslationManager.T("Author", "Author");
-            string hPrev = TranslationManager.T("ReportPreview", "Report Preview");
+            string hAuthor = TranslationManager.T("Customer", "Customer");
+            string hPreview = TranslationManager.T("Details", "Transaction Details");
             string hDate = TranslationManager.T("Date", "Date");
-            string hAct = TranslationManager.T("Action", "Action");
 
-            using (Font headFont = FontHelper.CreateFont(9F, FontStyle.Bold))
+            using (Font headFont = FontHelper.CreateFont(8.5F, FontStyle.Bold))
             using (SolidBrush headBrush = new SolidBrush(ThemeManager.TextMuted))
             {
-                g.DrawString(hAuth, headFont, headBrush, col1X, colHeaderY);
-                g.DrawString(hPrev, headFont, headBrush, col2X, colHeaderY);
+                g.DrawString(hAuthor, headFont, headBrush, col1X, colHeaderY);
+                g.DrawString(hPreview, headFont, headBrush, col2X, colHeaderY);
                 g.DrawString(hDate, headFont, headBrush, col3X, colHeaderY);
-                g.DrawString(hAct, headFont, headBrush, col4X + 8, colHeaderY);
             }
 
-            // 4. Data Rows
-            int startY = 82;
+            // 4. Check for Empty State
+            if (_comments.Count == 0)
+            {
+                int iconY = 96;
+                int iconBoxSize = 36;
+                Rectangle iconRect = new Rectangle((Width - iconBoxSize) / 2, iconY, iconBoxSize, iconBoxSize);
+
+                Color emptyBg = ThemeManager.IsDark ? Color.FromArgb(28, 38, 65) : Color.FromArgb(238, 242, 255);
+                using (GraphicsPath ipath = GraphicsHelper.GetRoundedRectanglePath(iconRect, 10))
+                using (SolidBrush ibrush = new SolidBrush(emptyBg))
+                {
+                    g.FillPath(ibrush, ipath);
+                }
+
+                Rectangle innerIconRect = new Rectangle(iconRect.X + 8, iconRect.Y + 8, iconBoxSize - 16, iconBoxSize - 16);
+                GraphicsHelper.DrawIcon(g, "report", innerIconRect, ThemeManager.AccentBlue, 1.6f);
+
+                string emptyTitle = TranslationManager.T("NoRecentTransactions", "No Recent Transactions");
+                string emptyDesc = TranslationManager.T("EmptyTransDesc", "Completed checkout sales will appear here automatically.");
+
+                using (Font eTitleFont = FontHelper.CreateFont(9.5F, FontStyle.Bold))
+                using (SolidBrush eTitleBrush = new SolidBrush(ThemeManager.TextPrimary))
+                {
+                    var sf = new StringFormat { Alignment = StringAlignment.Center };
+                    g.DrawString(emptyTitle, eTitleFont, eTitleBrush, Width / 2f, iconY + iconBoxSize + 10, sf);
+                }
+
+                using (Font eDescFont = FontHelper.CreateFont(8.5F, FontStyle.Regular))
+                using (SolidBrush eDescBrush = new SolidBrush(ThemeManager.TextMuted))
+                {
+                    var sf = new StringFormat { Alignment = StringAlignment.Center };
+                    g.DrawString(emptyDesc, eDescFont, eDescBrush, Width / 2f, iconY + iconBoxSize + 30, sf);
+                }
+
+                return;
+            }
+
+            // 5. Data Rows
+            int startY = 76;
             int rowHeight = 36;
 
-            using (Font authorFont = FontHelper.CreateFont(9F, FontStyle.Bold))
-            using (Font previewFont = FontHelper.CreateFont(9F, FontStyle.Regular))
-            using (Font dateFont = FontHelper.CreateFont(9F, FontStyle.Regular))
-            using (Font btnFont = FontHelper.CreateFont(8.25F, FontStyle.Bold))
+            using (Font authorFont = FontHelper.CreateFont(8.75F, FontStyle.Bold))
+            using (Font previewFont = FontHelper.CreateFont(8.5F, FontStyle.Regular))
+            using (Font dateFont = FontHelper.CreateFont(8.5F, FontStyle.Regular))
             using (SolidBrush textBrush = new SolidBrush(ThemeManager.TextPrimary))
-            using (SolidBrush dateBrush = new SolidBrush(ThemeManager.TextSecondary))
+            using (SolidBrush detailBrush = new SolidBrush(ThemeManager.TextSecondary))
+            using (SolidBrush dateBrush = new SolidBrush(ThemeManager.TextMuted))
             using (Pen divPen = new Pen(ThemeManager.SubtleDivider, 1f))
             {
-                for (int i = 0; i < _comments.Count; i++)
+                int maxRows = Math.Min(4, _comments.Count);
+                for (int i = 0; i < maxRows; i++)
                 {
                     var comment = _comments[i];
                     int rowY = startY + (i * rowHeight);
 
-                    // Row hover background
+                    // Row hover
                     if (i == _hoveredRow)
                     {
-                        Rectangle hoverRect = new Rectangle(padding - 6, rowY - 4, Width - (padding * 2) + 12, rowHeight);
-                        using (GraphicsPath hPath = GraphicsHelper.GetRoundedRectanglePath(hoverRect, 6))
+                        Rectangle hRect = new Rectangle(padding - 6, rowY - 2, Width - (padding * 2) + 12, rowHeight);
+                        using (GraphicsPath hPath = GraphicsHelper.GetRoundedRectanglePath(hRect, 6))
                         using (SolidBrush hBrush = new SolidBrush(ThemeManager.HoverBackground))
                         {
                             g.FillPath(hBrush, hPath);
@@ -185,56 +213,26 @@ namespace assignment_code.UI.Controls
                     // Divider line
                     if (i > 0)
                     {
-                        g.DrawLine(divPen, padding, rowY - 4, Width - padding, rowY - 4);
+                        g.DrawLine(divPen, padding, rowY - 2, Width - padding, rowY - 2);
                     }
 
-                    // Column 1: Author
-                    g.DrawString(comment.Author, authorFont, textBrush, col1X, rowY);
+                    // Column 1: Customer Initials + Name
+                    Rectangle avatarRect = new Rectangle(col1X, rowY + 5, 24, 24);
+                    GraphicsHelper.DrawInitialsAvatar(g, avatarRect, comment.Author);
 
-                    // Column 2: Comment Preview (Truncated if too long)
-                    Rectangle previewRect = new Rectangle(col2X, rowY, col3X - col2X - 10, rowHeight);
-                    if (comment.Preview.Contains("🔥"))
+                    g.DrawString(comment.Author, authorFont, textBrush, col1X + 30, rowY + 6);
+
+                    // Column 2: Details / Preview
+                    Rectangle previewRect = new Rectangle(col2X, rowY + 6, col3X - col2X - 10, 20);
+                    var sf = new StringFormat
                     {
-                        string cleanText = comment.Preview.Replace("🔥", "").TrimEnd('”', '\"', ' ') + " ";
-                        g.DrawString(cleanText, previewFont, textBrush, col2X, rowY);
-                        SizeF txtSz = g.MeasureString(cleanText, previewFont);
-                        Rectangle fireRect = new Rectangle((int)(col2X + txtSz.Width - 2), rowY + 1, 14, 14);
-                        GraphicsHelper.DrawIcon(g, "fire", fireRect, Color.Empty);
-                        g.DrawString("”", previewFont, textBrush, fireRect.Right + 1, rowY);
-                    }
-                    else
-                    {
-                        var sf = new StringFormat
-                        {
-                            Trimming = StringTrimming.EllipsisCharacter,
-                            FormatFlags = StringFormatFlags.NoWrap
-                        };
-                        g.DrawString(comment.Preview, previewFont, textBrush, previewRect, sf);
-                    }
+                        Trimming = StringTrimming.EllipsisCharacter,
+                        FormatFlags = StringFormatFlags.NoWrap
+                    };
+                    g.DrawString(comment.Preview, previewFont, detailBrush, previewRect, sf);
 
                     // Column 3: Date
-                    g.DrawString(comment.Date, dateFont, dateBrush, col3X, rowY);
-
-                    // Column 4: [View] Button
-                    Rectangle btnRect = new Rectangle(col4X, rowY - 2, 50, 22);
-                    bool isBtnHovered = (i == _hoveredBtnIndex);
-
-                    using (GraphicsPath btnPath = GraphicsHelper.GetRoundedRectanglePath(btnRect, 6))
-                    using (SolidBrush btnBg = new SolidBrush(isBtnHovered ? ThemeManager.AccentBlue : ThemeManager.ViewButtonBg))
-                    {
-                        g.FillPath(btnBg, btnPath);
-                    }
-
-                    Color btnFg = isBtnHovered ? Color.White : ThemeManager.ViewButtonText;
-                    using (SolidBrush btnTextBrush = new SolidBrush(btnFg))
-                    {
-                        var btnSf = new StringFormat
-                        {
-                            Alignment = StringAlignment.Center,
-                            LineAlignment = StringAlignment.Center
-                        };
-                        g.DrawString("View", btnFont, btnTextBrush, btnRect, btnSf);
-                    }
+                    g.DrawString(comment.Date, dateFont, dateBrush, col3X, rowY + 6);
                 }
             }
         }

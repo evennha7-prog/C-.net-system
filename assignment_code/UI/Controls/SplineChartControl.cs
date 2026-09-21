@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Linq;
 using System.Windows.Forms;
 using assignment_code.Models;
 
@@ -11,11 +12,11 @@ namespace assignment_code.UI.Controls
     public class SplineChartControl : Control
     {
         private SplineChartDataset _dataset = new SplineChartDataset();
-        private string _title = "Reports Trend";
+        private string _title = "Sales & Order Trends";
         private string _selectedPeriod = "Last 15 days";
         private Rectangle _periodButtonRect;
         private int _borderRadius = 16;
-        private double _maxAxisValue = 50;
+        private double _maxAxisValue = 20;
         private int _hoveredPointIndex = -1;
 
         public event EventHandler<string> PeriodChanged;
@@ -52,6 +53,27 @@ namespace assignment_code.UI.Controls
         {
             _dataset = dataset ?? new SplineChartDataset();
             _selectedPeriod = period;
+
+            // Dynamically scale max axis value
+            double maxVal = 0;
+            if (_dataset.Series != null)
+            {
+                foreach (var s in _dataset.Series)
+                {
+                    if (s.Values != null && s.Values.Count > 0)
+                    {
+                        double m = s.Values.Max();
+                        if (m > maxVal) maxVal = m;
+                    }
+                }
+            }
+
+            if (maxVal <= 5) _maxAxisValue = 10;
+            else if (maxVal <= 10) _maxAxisValue = 15;
+            else if (maxVal <= 25) _maxAxisValue = 30;
+            else if (maxVal <= 50) _maxAxisValue = 60;
+            else _maxAxisValue = Math.Ceiling(maxVal * 1.25 / 10.0) * 10;
+
             Invalidate();
         }
 
@@ -104,13 +126,13 @@ namespace assignment_code.UI.Controls
             if (_periodButtonRect.Contains(e.Location))
             {
                 var menu = new ContextMenuStrip();
-                var item1 = menu.Items.Add("Last 15 days");
-                var item2 = menu.Items.Add("Last 30 days");
-                var item3 = menu.Items.Add("Last 7 days");
+                var item1 = menu.Items.Add("Last 7 days");
+                var item2 = menu.Items.Add("Last 15 days");
+                var item3 = menu.Items.Add("Last 30 days");
 
-                item1.Click += (s, ev) => ChangePeriod("Last 15 days");
-                item2.Click += (s, ev) => ChangePeriod("Last 30 days");
-                item3.Click += (s, ev) => ChangePeriod("Last 7 days");
+                item1.Click += (s, ev) => ChangePeriod("Last 7 days");
+                item2.Click += (s, ev) => ChangePeriod("Last 15 days");
+                item3.Click += (s, ev) => ChangePeriod("Last 30 days");
 
                 menu.Show(this, new Point(_periodButtonRect.Left, _periodButtonRect.Bottom + 2));
             }
@@ -129,6 +151,13 @@ namespace assignment_code.UI.Controls
             Graphics g = e.Graphics;
             GraphicsHelper.SetHighQuality(g);
 
+            // 0. Paint parent background first to eliminate white corner artifacts
+            Color parentBg = (Parent != null && Parent.BackColor != Color.Transparent) ? Parent.BackColor : ThemeManager.Background;
+            using (var parentBrush = new SolidBrush(parentBg))
+            {
+                g.FillRectangle(parentBrush, ClientRectangle);
+            }
+
             Rectangle cardBounds = new Rectangle(0, 0, Width - 1, Height - 1);
             if (cardBounds.Width <= 0 || cardBounds.Height <= 0) return;
 
@@ -140,7 +169,7 @@ namespace assignment_code.UI.Controls
                     g.FillPath(bgBrush, cardPath);
                 }
 
-                using (Pen borderPen = new Pen(ThemeManager.BorderColor, 1f))
+                using (Pen borderPen = new Pen(ThemeManager.BorderColor, 1.2f))
                 {
                     borderPen.Alignment = PenAlignment.Inset;
                     g.DrawPath(borderPen, cardPath);
@@ -149,8 +178,8 @@ namespace assignment_code.UI.Controls
 
             int padding = 20;
 
-            // 2. Title ("Comments Trend")
-            using (Font titleFont = FontHelper.CreateFontForText(_title, 12F, FontStyle.Bold))
+            // 2. Title
+            using (Font titleFont = FontHelper.CreateFontForText(_title, 11F, FontStyle.Bold))
             using (SolidBrush titleBrush = new SolidBrush(ThemeManager.TextPrimary))
             {
                 g.DrawString(_title, titleFont, titleBrush, padding, padding);
@@ -191,27 +220,26 @@ namespace assignment_code.UI.Controls
                 }
             }
 
-            // 4. Legend Items (Approved, Pending, Spam/Rejected)
-            int legendY = padding + 32;
+            // 4. Legend Items
+            int legendY = padding + 28;
             int currentLegendX = padding;
-            int sqSize = 10;
+            int dotSize = 8;
 
             using (SolidBrush textBrush = new SolidBrush(ThemeManager.TextSecondary))
             {
                 foreach (var series in _dataset.Series)
                 {
-                    Rectangle sqRect = new Rectangle(currentLegendX, legendY + 3, sqSize, sqSize);
-                    using (GraphicsPath sqPath = GraphicsHelper.GetRoundedRectanglePath(sqRect, 2))
-                    using (SolidBrush sqBrush = new SolidBrush(series.LineColor))
+                    Rectangle dotRect = new Rectangle(currentLegendX, legendY + 4, dotSize, dotSize);
+                    using (SolidBrush dotBrush = new SolidBrush(series.LineColor))
                     {
-                        g.FillPath(sqBrush, sqPath);
+                        g.FillEllipse(dotBrush, dotRect);
                     }
 
                     using (Font legFont = FontHelper.CreateFontForText(series.Name, 8.5F, FontStyle.Regular))
                     {
-                        g.DrawString(series.Name, legFont, textBrush, currentLegendX + sqSize + 6, legendY);
+                        g.DrawString(series.Name, legFont, textBrush, currentLegendX + dotSize + 6, legendY);
                         SizeF sz = g.MeasureString(series.Name, legFont);
-                        currentLegendX += sqSize + 6 + (int)sz.Width + 16;
+                        currentLegendX += dotSize + 6 + (int)sz.Width + 16;
                     }
                 }
             }
@@ -219,13 +247,13 @@ namespace assignment_code.UI.Controls
             // 5. Gridlines and Y-Axis
             int chartLeft = 40;
             int chartRight = Width - 20;
-            int chartTop = 95;
+            int chartTop = 85;
             int chartBottom = Height - 35;
             int plotH = chartBottom - chartTop;
             int plotW = chartRight - chartLeft;
 
-            int ySteps = 5;
-            using (Font axisFont = FontHelper.CreateFont(8.25F, FontStyle.Regular))
+            int ySteps = 4;
+            using (Font axisFont = FontHelper.CreateFont(8F, FontStyle.Regular))
             using (SolidBrush axisBrush = new SolidBrush(ThemeManager.TextMuted))
             using (Pen gridPen = new Pen(ThemeManager.GridLineColor, 1f) { DashStyle = DashStyle.Dash, DashPattern = new float[] { 3, 3 } })
             {
@@ -246,11 +274,13 @@ namespace assignment_code.UI.Controls
 
             float stepX = (float)plotW / (_dataset.XLabels.Count - 1);
 
-            // 6. X-Axis Labels (1..15)
-            using (Font xFont = FontHelper.CreateFont(8.25F, FontStyle.Regular))
+            // 6. X-Axis Labels
+            using (Font xFont = FontHelper.CreateFont(8F, FontStyle.Regular))
             using (SolidBrush xBrush = new SolidBrush(ThemeManager.TextSecondary))
             {
-                for (int i = 0; i < _dataset.XLabels.Count; i++)
+                // Only draw every 2nd or 3rd label if many items to prevent overlapping
+                int stepInterval = _dataset.XLabels.Count > 10 ? 2 : 1;
+                for (int i = 0; i < _dataset.XLabels.Count; i += stepInterval)
                 {
                     float x = chartLeft + i * stepX;
                     string lbl = _dataset.XLabels[i];
@@ -263,13 +293,13 @@ namespace assignment_code.UI.Controls
             if (_hoveredPointIndex >= 0 && _hoveredPointIndex < _dataset.XLabels.Count)
             {
                 float hx = chartLeft + _hoveredPointIndex * stepX;
-                using (Pen guidePen = new Pen(ThemeManager.BorderColor, 1.5f) { DashStyle = DashStyle.Dot })
+                using (Pen guidePen = new Pen(ThemeManager.BorderColor, 1.2f) { DashStyle = DashStyle.Dash })
                 {
                     g.DrawLine(guidePen, hx, chartTop, hx, chartBottom);
                 }
             }
 
-            // 8. Draw Spline Curves
+            // 8. Draw Smooth Spline Curves with Soft Gradient Area Fills
             foreach (var series in _dataset.Series)
             {
                 if (series.Values == null || series.Values.Count < 2) continue;
@@ -284,22 +314,49 @@ namespace assignment_code.UI.Controls
                     points.Add(new PointF(x, y));
                 }
 
-                using (Pen curvePen = new Pen(series.LineColor, 2.0f)
+                // Gradient area fill underneath curve
+                if (points.Count >= 2 && plotH > 10)
                 {
-                    DashStyle = DashStyle.Dash,
-                    DashPattern = new float[] { 3.5f, 2.5f },
+                    using (GraphicsPath areaPath = new GraphicsPath())
+                    {
+                        areaPath.AddCurve(points.ToArray(), 0.45f);
+                        areaPath.AddLine(points.Last(), new PointF(points.Last().X, chartBottom));
+                        areaPath.AddLine(new PointF(points.Last().X, chartBottom), new PointF(points.First().X, chartBottom));
+                        areaPath.AddLine(new PointF(points.First().X, chartBottom), points.First());
+                        areaPath.CloseFigure();
+
+                        Rectangle areaBounds = new Rectangle(chartLeft, chartTop, plotW, plotH);
+                        if (areaBounds.Width > 0 && areaBounds.Height > 0)
+                        {
+                            Color topColor = Color.FromArgb(38, series.LineColor);
+                            Color bottomColor = Color.FromArgb(0, series.LineColor);
+                            using (LinearGradientBrush areaBrush = new LinearGradientBrush(areaBounds, topColor, bottomColor, LinearGradientMode.Vertical))
+                            {
+                                g.FillPath(areaBrush, areaPath);
+                            }
+                        }
+                    }
+                }
+
+                // Solid Anti-Aliased Spline Curve
+                using (Pen curvePen = new Pen(series.LineColor, 2.2f)
+                {
                     LineJoin = LineJoin.Round,
                     StartCap = LineCap.Round,
                     EndCap = LineCap.Round
                 })
                 {
-                    g.DrawCurve(curvePen, points.ToArray(), 0.5f);
+                    g.DrawCurve(curvePen, points.ToArray(), 0.45f);
                 }
 
-                // Draw highlighted point if hovered
+                // Highlight dot on hover
                 if (_hoveredPointIndex >= 0 && _hoveredPointIndex < points.Count)
                 {
                     var pt = points[_hoveredPointIndex];
+                    using (SolidBrush glowBrush = new SolidBrush(Color.FromArgb(60, series.LineColor)))
+                    {
+                        g.FillEllipse(glowBrush, pt.X - 8, pt.Y - 8, 16, 16);
+                    }
                     using (SolidBrush dotBrush = new SolidBrush(series.LineColor))
                     using (SolidBrush innerBrush = new SolidBrush(ThemeManager.CardBackground))
                     {
