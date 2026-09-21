@@ -109,7 +109,6 @@ namespace assignment_code.UI
             // 
             // _usernameWrapper
             // 
-            this._usernameWrapper.BackColor = System.Drawing.Color.Transparent;
             this._usernameWrapper.Controls.Add(this._txtUsername);
             this._usernameWrapper.Cursor = System.Windows.Forms.Cursors.IBeam;
             this._usernameWrapper.Location = new System.Drawing.Point(32, 108);
@@ -125,9 +124,9 @@ namespace assignment_code.UI
             this._txtUsername.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this._txtUsername.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this._txtUsername.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(15)))), ((int)(((byte)(23)))), ((int)(((byte)(42)))));
-            this._txtUsername.Location = new System.Drawing.Point(12, 12);
+            this._txtUsername.Location = new System.Drawing.Point(36, 12);
             this._txtUsername.Name = "_txtUsername";
-            this._txtUsername.Size = new System.Drawing.Size(332, 18);
+            this._txtUsername.Size = new System.Drawing.Size(306, 20);
             this._txtUsername.TabIndex = 0;
             this._txtUsername.Enter += new System.EventHandler(this.TxtUsername_Enter);
             this._txtUsername.KeyDown += new System.Windows.Forms.KeyEventHandler(this.TxtField_KeyDown);
@@ -145,7 +144,6 @@ namespace assignment_code.UI
             // 
             // _passwordWrapper
             // 
-            this._passwordWrapper.BackColor = System.Drawing.Color.Transparent;
             this._passwordWrapper.Controls.Add(this._txtPassword);
             this._passwordWrapper.Controls.Add(this._btnTogglePassword);
             this._passwordWrapper.Cursor = System.Windows.Forms.Cursors.IBeam;
@@ -162,9 +160,9 @@ namespace assignment_code.UI
             this._txtPassword.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this._txtPassword.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this._txtPassword.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(15)))), ((int)(((byte)(23)))), ((int)(((byte)(42)))));
-            this._txtPassword.Location = new System.Drawing.Point(12, 12);
+            this._txtPassword.Location = new System.Drawing.Point(36, 12);
             this._txtPassword.Name = "_txtPassword";
-            this._txtPassword.Size = new System.Drawing.Size(308, 18);
+            this._txtPassword.Size = new System.Drawing.Size(275, 20);
             this._txtPassword.TabIndex = 0;
             this._txtPassword.UseSystemPasswordChar = true;
             this._txtPassword.Enter += new System.EventHandler(this.TxtPassword_Enter);

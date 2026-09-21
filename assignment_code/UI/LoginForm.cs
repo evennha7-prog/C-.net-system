@@ -12,13 +12,16 @@ namespace assignment_code.UI
 {
     public partial class LoginForm : Form
     {
-        // P/Invoke for dragging borderless window
+        // P/Invoke for dragging borderless window and cue banners
         [DllImport("user32.dll")]
         public static extern bool ReleaseCapture();
         [DllImport("user32.dll")]
         public static extern int SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        private static extern Int32 SendMessage(IntPtr hWnd, int msg, IntPtr wParam, string lParam);
         private const int WM_NCLBUTTONDOWN = 0xA1;
         private const int HT_CAPTION = 0x2;
+        private const int EM_SETCUEBANNER = 0x1501;
 
         public AppUser AuthenticatedUser { get; private set; }
 
@@ -49,8 +52,6 @@ namespace assignment_code.UI
         private static readonly Color BorderNormal = Color.FromArgb(226, 232, 240);    // #E2E8F0
         private static readonly Color BorderFocused = Color.FromArgb(37, 99, 235);     // #2563EB
 
-
-
         public LoginForm()
         {
             SetStyle(ControlStyles.AllPaintingInWmPaint |
@@ -62,6 +63,12 @@ namespace assignment_code.UI
             DoubleBufferHelper.EnableDoubleBufferingTree(this);
             ComputeTopBarRects();
             InitializeSpinner();
+
+            _txtUsername.HandleCreated += (s, e) => UpdateCueBanners();
+            _txtPassword.HandleCreated += (s, e) => UpdateCueBanners();
+            _txtUsername.BringToFront();
+            _txtPassword.BringToFront();
+            _btnTogglePassword.BringToFront();
 
             ThemeManager.ThemeChanged += (s, e) => ApplyTheme();
             TranslationManager.LanguageChanged += (s, e) => ApplyTranslations();
@@ -233,22 +240,43 @@ namespace assignment_code.UI
             bool isDark = ThemeManager.IsDark;
             BackColor = isDark ? Color.FromArgb(15, 23, 42) : Color.FromArgb(243, 244, 246);
 
+            Color cardBg = isDark ? Color.FromArgb(24, 32, 53) : Color.White;
+            _cardPanel.BackColor = cardBg;
+            _usernameWrapper.BackColor = cardBg;
+            _passwordWrapper.BackColor = cardBg;
+
+            Color inputBg = isDark ? Color.FromArgb(30, 41, 59) : Color.FromArgb(248, 250, 252);
+            _txtUsername.BackColor = inputBg;
+            _txtUsername.ForeColor = isDark ? Color.FromArgb(241, 245, 249) : Color.FromArgb(15, 23, 42);
+
+            _txtPassword.BackColor = inputBg;
+            _txtPassword.ForeColor = isDark ? Color.FromArgb(241, 245, 249) : Color.FromArgb(15, 23, 42);
+
             _lblTitle.ForeColor = isDark ? Color.FromArgb(241, 245, 249) : Color.FromArgb(30, 41, 59);
             _lblUsername.ForeColor = isDark ? Color.FromArgb(203, 213, 225) : Color.FromArgb(71, 85, 105);
             _lblPassword.ForeColor = isDark ? Color.FromArgb(203, 213, 225) : Color.FromArgb(71, 85, 105);
-
-            _txtUsername.BackColor = isDark ? Color.FromArgb(30, 41, 59) : Color.White;
-            _txtUsername.ForeColor = isDark ? Color.FromArgb(241, 245, 249) : Color.FromArgb(15, 23, 42);
-
-            _txtPassword.BackColor = isDark ? Color.FromArgb(30, 41, 59) : Color.White;
-            _txtPassword.ForeColor = isDark ? Color.FromArgb(241, 245, 249) : Color.FromArgb(15, 23, 42);
-
             _lblFooterText.ForeColor = isDark ? Color.FromArgb(148, 163, 184) : Color.FromArgb(100, 116, 139);
+
+            UpdateCueBanners();
 
             _usernameWrapper.Invalidate();
             _passwordWrapper.Invalidate();
             _cardPanel.Invalidate();
             Invalidate();
+        }
+
+        private void UpdateCueBanners()
+        {
+            if (_txtUsername != null && _txtUsername.IsHandleCreated)
+            {
+                string uCue = TranslationManager.CurrentLanguage == AppLanguage.Khmer ? "បញ្ចូលអ៊ីមែល ឬ ឈ្មោះគណនី..." : "Enter your email or username...";
+                SendMessage(_txtUsername.Handle, EM_SETCUEBANNER, (IntPtr)1, uCue);
+            }
+            if (_txtPassword != null && _txtPassword.IsHandleCreated)
+            {
+                string pCue = TranslationManager.CurrentLanguage == AppLanguage.Khmer ? "បញ្ចូលពាក្យសម្ងាត់..." : "Enter your password...";
+                SendMessage(_txtPassword.Handle, EM_SETCUEBANNER, (IntPtr)1, pCue);
+            }
         }
 
         private void ApplyTranslations()
@@ -257,11 +285,15 @@ namespace assignment_code.UI
             _lblTitle.Text = titleText;
             _lblTitle.Font = FontHelper.CreateFontForText(titleText, 17F, FontStyle.Bold);
 
-            string userText = TranslationManager.T("Username", "Username");
+            string userText = TranslationManager.CurrentLanguage == AppLanguage.Khmer
+                ? "អ៊ីមែល ឬ ឈ្មោះគណនី"
+                : "Email or Username";
             _lblUsername.Text = userText;
             _lblUsername.Font = FontHelper.CreateFontForText(userText, 9.5F, FontStyle.Bold);
 
-            string passText = TranslationManager.T("Password", "Password");
+            string passText = TranslationManager.CurrentLanguage == AppLanguage.Khmer
+                ? "ពាក្យសម្ងាត់"
+                : "Password";
             _lblPassword.Text = passText;
             _lblPassword.Font = FontHelper.CreateFontForText(passText, 9.5F, FontStyle.Bold);
 
@@ -274,6 +306,7 @@ namespace assignment_code.UI
             _lnkSignUp.Font = FontHelper.CreateFontForText(signUpText, 9F, FontStyle.Bold);
             _lnkSignUp.Location = new Point(32 + _lblFooterText.PreferredWidth + 6, _lblFooterText.Top);
 
+            UpdateCueBanners();
             _btnLogin.Invalidate();
             Invalidate();
         }
@@ -324,9 +357,9 @@ namespace assignment_code.UI
             GraphicsHelper.SetHighQuality(g);
 
             Rectangle bounds = new Rectangle(0, 0, _usernameWrapper.Width - 1, _usernameWrapper.Height - 1);
-            using (var path = GraphicsHelper.GetRoundedRectanglePath(bounds, 6))
+            using (var path = GraphicsHelper.GetRoundedRectanglePath(bounds, 7))
             {
-                Color bg = ThemeManager.IsDark ? Color.FromArgb(30, 41, 59) : Color.White;
+                Color bg = _txtUsername.BackColor;
                 using (var brush = new SolidBrush(bg))
                 {
                     g.FillPath(brush, path);
@@ -338,6 +371,11 @@ namespace assignment_code.UI
                     g.DrawPath(pen, path);
                 }
             }
+
+            // Draw Mail icon on left
+            Rectangle iconRect = new Rectangle(12, (_usernameWrapper.Height - 16) / 2, 16, 16);
+            Color iconColor = _usernameFocused ? BorderFocused : (ThemeManager.IsDark ? Color.FromArgb(148, 163, 184) : Color.FromArgb(156, 163, 175));
+            GraphicsHelper.DrawIcon(g, "mail", iconRect, iconColor, 1.4f);
         }
 
         private void PasswordWrapper_Paint(object sender, PaintEventArgs e)
@@ -346,9 +384,9 @@ namespace assignment_code.UI
             GraphicsHelper.SetHighQuality(g);
 
             Rectangle bounds = new Rectangle(0, 0, _passwordWrapper.Width - 1, _passwordWrapper.Height - 1);
-            using (var path = GraphicsHelper.GetRoundedRectanglePath(bounds, 6))
+            using (var path = GraphicsHelper.GetRoundedRectanglePath(bounds, 7))
             {
-                Color bg = ThemeManager.IsDark ? Color.FromArgb(30, 41, 59) : Color.White;
+                Color bg = _txtPassword.BackColor;
                 using (var brush = new SolidBrush(bg))
                 {
                     g.FillPath(brush, path);
@@ -360,6 +398,11 @@ namespace assignment_code.UI
                     g.DrawPath(pen, path);
                 }
             }
+
+            // Draw Lock icon on left
+            Rectangle iconRect = new Rectangle(12, (_passwordWrapper.Height - 16) / 2, 16, 16);
+            Color iconColor = _passwordFocused ? BorderFocused : (ThemeManager.IsDark ? Color.FromArgb(148, 163, 184) : Color.FromArgb(156, 163, 175));
+            GraphicsHelper.DrawIcon(g, "lock", iconRect, iconColor, 1.4f);
         }
 
         private void BtnTogglePassword_Paint(object sender, PaintEventArgs e)

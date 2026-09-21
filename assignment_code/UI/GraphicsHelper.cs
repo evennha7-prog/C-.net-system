@@ -361,7 +361,6 @@ namespace assignment_code.UI
 
                     case "comments":
                     case "chat":
-                    case "mail":
                         // Chat bubble
                         var chatPoints = new PointF[]
                         {
@@ -640,6 +639,31 @@ namespace assignment_code.UI
                     case "phone":
                         g.DrawRectangle(pen, x + 4, y + 2, w - 8, h - 4);
                         g.DrawLine(pen, x + 7, y + h - 5, x + w - 7, y + h - 5);
+                        break;
+
+                    case "mail":
+                    case "email":
+                    case "envelope":
+                        // Envelope icon
+                        g.DrawRectangle(pen, x + 2, y + 4, w - 4, h - 8);
+                        g.DrawLine(pen, x + 2, y + 4, x + w / 2f, y + h / 2f + 1);
+                        g.DrawLine(pen, x + w - 2, y + 4, x + w / 2f, y + h / 2f + 1);
+                        break;
+
+                    case "lock":
+                        // Padlock icon
+                        int shackleW = (int)(w * 0.44f);
+                        int shackleH = (int)(h * 0.38f);
+                        int shackleX = x + (w - shackleW) / 2;
+                        int shackleY = y + 2;
+                        g.DrawArc(pen, shackleX, shackleY, shackleW, shackleH * 2, 180, 180);
+                        int bodyY = y + shackleH + 2;
+                        int bodyH = h - bodyY - 2;
+                        using (var lockPath = GetRoundedRectanglePath(new Rectangle(x + 3, bodyY, w - 6, bodyH), 3))
+                        {
+                            g.DrawPath(pen, lockPath);
+                        }
+                        g.DrawLine(pen, x + w / 2f, bodyY + 3, x + w / 2f, bodyY + bodyH - 4);
                         break;
                 }
             }
