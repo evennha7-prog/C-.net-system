@@ -42,7 +42,6 @@ namespace assignment_code.UI.Views
             // 
             // _contentWrapper
             // 
-            this._contentWrapper.BackColor = System.Drawing.Color.Transparent;
             this._contentWrapper.Controls.Add(this._kpiPosts);
             this._contentWrapper.Controls.Add(this._kpiCategories);
             this._contentWrapper.Controls.Add(this._kpiMedia);
@@ -58,7 +57,6 @@ namespace assignment_code.UI.Views
             // 
             // _kpiPosts
             // 
-            this._kpiPosts.BackColor = System.Drawing.Color.Transparent;
             this._kpiPosts.Location = new System.Drawing.Point(0, 14);
             this._kpiPosts.Name = "_kpiPosts";
             this._kpiPosts.Size = new System.Drawing.Size(235, 126);
@@ -66,7 +64,6 @@ namespace assignment_code.UI.Views
             // 
             // _kpiCategories
             // 
-            this._kpiCategories.BackColor = System.Drawing.Color.Transparent;
             this._kpiCategories.Location = new System.Drawing.Point(251, 14);
             this._kpiCategories.Name = "_kpiCategories";
             this._kpiCategories.Size = new System.Drawing.Size(235, 126);
@@ -74,7 +71,6 @@ namespace assignment_code.UI.Views
             // 
             // _kpiMedia
             // 
-            this._kpiMedia.BackColor = System.Drawing.Color.Transparent;
             this._kpiMedia.Location = new System.Drawing.Point(502, 14);
             this._kpiMedia.Name = "_kpiMedia";
             this._kpiMedia.Size = new System.Drawing.Size(235, 126);
@@ -82,7 +78,6 @@ namespace assignment_code.UI.Views
             // 
             // _kpiComments
             // 
-            this._kpiComments.BackColor = System.Drawing.Color.Transparent;
             this._kpiComments.Location = new System.Drawing.Point(753, 14);
             this._kpiComments.Name = "_kpiComments";
             this._kpiComments.Size = new System.Drawing.Size(259, 126);
@@ -90,7 +85,6 @@ namespace assignment_code.UI.Views
             // 
             // _barChartPostGrowth
             // 
-            this._barChartPostGrowth.BackColor = System.Drawing.Color.Transparent;
             this._barChartPostGrowth.Location = new System.Drawing.Point(0, 156);
             this._barChartPostGrowth.Name = "_barChartPostGrowth";
             this._barChartPostGrowth.Size = new System.Drawing.Size(438, 250);
@@ -99,7 +93,6 @@ namespace assignment_code.UI.Views
             // 
             // _splineChartCommentsTrend
             // 
-            this._splineChartCommentsTrend.BackColor = System.Drawing.Color.Transparent;
             this._splineChartCommentsTrend.Location = new System.Drawing.Point(454, 156);
             this._splineChartCommentsTrend.Name = "_splineChartCommentsTrend";
             this._splineChartCommentsTrend.Size = new System.Drawing.Size(558, 250);
@@ -108,7 +101,6 @@ namespace assignment_code.UI.Views
             // 
             // _latestPostsCard
             // 
-            this._latestPostsCard.BackColor = System.Drawing.Color.Transparent;
             this._latestPostsCard.Location = new System.Drawing.Point(0, 422);
             this._latestPostsCard.Name = "_latestPostsCard";
             this._latestPostsCard.Size = new System.Drawing.Size(438, 230);
@@ -116,7 +108,6 @@ namespace assignment_code.UI.Views
             // 
             // _recentCommentsCard
             // 
-            this._recentCommentsCard.BackColor = System.Drawing.Color.Transparent;
             this._recentCommentsCard.Location = new System.Drawing.Point(454, 422);
             this._recentCommentsCard.Name = "_recentCommentsCard";
             this._recentCommentsCard.Size = new System.Drawing.Size(558, 230);
@@ -126,7 +117,6 @@ namespace assignment_code.UI.Views
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.AutoScroll = true;
-            this.BackColor = System.Drawing.Color.Transparent;
             this.Controls.Add(this._contentWrapper);
             this.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Name = "DashboardView";

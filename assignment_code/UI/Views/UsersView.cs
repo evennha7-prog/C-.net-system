@@ -48,7 +48,7 @@ namespace assignment_code.UI.Views
                      ControlStyles.ResizeRedraw |
                      ControlStyles.SupportsTransparentBackColor, true);
 
-            BackColor = Color.Transparent;
+            BackColor = ThemeManager.Background;
             AutoScroll = true;
 
             InitializeLayout();
@@ -77,7 +77,7 @@ namespace assignment_code.UI.Views
                 Location = new Point(0, 0),
                 Width = ClientSize.Width,
                 Height = 850,
-                BackColor = Color.Transparent
+                BackColor = ThemeManager.Background
             };
             Controls.Add(_contentWrapper);
             Resize += (s, e) => RepositionContent();
@@ -85,7 +85,7 @@ namespace assignment_code.UI.Views
             // 1. Header Area
             _headerPanel = new Panel
             {
-                BackColor = Color.Transparent,
+                BackColor = ThemeManager.Background,
                 Height = 48
             };
             _lblTitle = new Label
@@ -119,7 +119,7 @@ namespace assignment_code.UI.Views
             // 2. Metrics Row
             _metricsPanel = new Panel
             {
-                BackColor = Color.Transparent,
+                BackColor = ThemeManager.Background,
                 Height = 78
             };
             _cardTotalStaff = new ManagementStatCard { IconName = "users", AccentColor = Color.FromArgb(59, 130, 246) };
@@ -380,6 +380,11 @@ namespace assignment_code.UI.Views
 
         private void ApplyTheme()
         {
+            BackColor = ThemeManager.Background;
+            if (_contentWrapper != null) _contentWrapper.BackColor = ThemeManager.Background;
+            if (_headerPanel != null) _headerPanel.BackColor = ThemeManager.Background;
+            if (_metricsPanel != null) _metricsPanel.BackColor = ThemeManager.Background;
+
             DataGridViewStyleHelper.UpdateColors(_grid);
 
             _lblTitle.ForeColor = ThemeManager.TextPrimary;

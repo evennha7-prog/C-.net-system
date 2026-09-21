@@ -35,10 +35,9 @@ namespace assignment_code.UI.Views
             SetStyle(ControlStyles.UserPaint |
                      ControlStyles.AllPaintingInWmPaint |
                      ControlStyles.OptimizedDoubleBuffer |
-                     ControlStyles.ResizeRedraw |
-                     ControlStyles.SupportsTransparentBackColor, true);
+                     ControlStyles.ResizeRedraw, true);
 
-            BackColor = Color.Transparent;
+            BackColor = ThemeManager.Background;
 
             InitializeComponent();
             DoubleBufferHelper.EnableDoubleBufferingTree(this);
@@ -642,12 +641,17 @@ namespace assignment_code.UI.Views
 
         private void ApplyTheme()
         {
-            _rightCartPanel.BackColor = ThemeManager.CardBackground;
-            _summaryBoxPanel.BackColor = ThemeManager.IsDark ? Color.FromArgb(20, 26, 42) : Color.FromArgb(248, 250, 254);
-            _lblSubtotal.ForeColor = ThemeManager.TextSecondary;
-            _lblTax.ForeColor = ThemeManager.TextSecondary;
-            _lblTotal.ForeColor = ThemeManager.AccentBlue;
-            _btnCheckout.BackColor = ThemeManager.AccentBlue;
+            BackColor = ThemeManager.Background;
+            if (_leftProductArea != null) _leftProductArea.BackColor = ThemeManager.Background;
+            if (_categoryPillsPanel != null) _categoryPillsPanel.BackColor = ThemeManager.Background;
+            if (_productsGrid != null) _productsGrid.BackColor = ThemeManager.Background;
+
+            if (_rightCartPanel != null) _rightCartPanel.BackColor = ThemeManager.CardBackground;
+            if (_summaryBoxPanel != null) _summaryBoxPanel.BackColor = ThemeManager.IsDark ? Color.FromArgb(20, 26, 42) : Color.FromArgb(248, 250, 254);
+            if (_lblSubtotal != null) _lblSubtotal.ForeColor = ThemeManager.TextSecondary;
+            if (_lblTax != null) _lblTax.ForeColor = ThemeManager.TextSecondary;
+            if (_lblTotal != null) _lblTotal.ForeColor = ThemeManager.AccentBlue;
+            if (_btnCheckout != null) _btnCheckout.BackColor = ThemeManager.AccentBlue;
             PopulateCategoryPills();
             PopulateProducts();
             UpdateCartUI();

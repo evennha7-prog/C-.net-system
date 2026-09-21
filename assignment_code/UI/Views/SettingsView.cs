@@ -307,6 +307,9 @@ namespace assignment_code.UI.Views
         private void DrawCardBackground(Graphics g, Panel panel, string title)
         {
             GraphicsHelper.SetHighQuality(g);
+            using (SolidBrush parentBrush = new SolidBrush(ThemeManager.Background))
+                g.FillRectangle(parentBrush, panel.ClientRectangle);
+
             Rectangle r = new Rectangle(0, 0, panel.Width - 1, panel.Height - 1);
             using (GraphicsPath p = GraphicsHelper.GetRoundedRectanglePath(r, 12))
             {
@@ -349,6 +352,9 @@ namespace assignment_code.UI.Views
 
         private void ApplyTheme()
         {
+            BackColor = ThemeManager.Background;
+            if (_contentWrapper != null) _contentWrapper.BackColor = ThemeManager.Background;
+
             _storeProfileCard.BackColor = ThemeManager.CardBackground;
             _posConfigCard.BackColor = ThemeManager.CardBackground;
             _databaseCard.BackColor = ThemeManager.CardBackground;

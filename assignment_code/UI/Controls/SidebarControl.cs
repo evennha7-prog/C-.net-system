@@ -28,7 +28,7 @@ namespace assignment_code.UI.Controls
                      ControlStyles.OptimizedDoubleBuffer |
                      ControlStyles.ResizeRedraw, true);
 
-            BackColor = Color.White;
+            BackColor = ThemeManager.SidebarBackground;
             Width = 220;
             Dock = DockStyle.Left;
 

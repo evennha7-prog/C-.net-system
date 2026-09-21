@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -243,6 +243,9 @@ namespace assignment_code.UI.Views
 
         private void ApplyTheme()
         {
+            BackColor = ThemeManager.Background;
+            if (_contentWrapper != null) _contentWrapper.BackColor = ThemeManager.Background;
+
             _cardLangEn.BackColor = ThemeManager.CardBackground;
             _cardLangKh.BackColor = ThemeManager.CardBackground;
             _previewCard.BackColor = ThemeManager.CardBackground;

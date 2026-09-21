@@ -56,12 +56,15 @@ namespace assignment_code.UI.Controls
             SetStyle(ControlStyles.UserPaint |
                      ControlStyles.AllPaintingInWmPaint |
                      ControlStyles.OptimizedDoubleBuffer |
-                     ControlStyles.ResizeRedraw |
-                     ControlStyles.SupportsTransparentBackColor, true);
+                     ControlStyles.ResizeRedraw, true);
 
-            BackColor = Color.Transparent;
+            BackColor = ThemeManager.Background;
             Size = new Size(180, 78);
-            ThemeManager.ThemeChanged += (s, e) => Invalidate();
+            ThemeManager.ThemeChanged += (s, e) =>
+            {
+                BackColor = ThemeManager.Background;
+                Invalidate();
+            };
         }
 
         public void SetData(string title, string value, string badgeText, string iconName, Color accent)

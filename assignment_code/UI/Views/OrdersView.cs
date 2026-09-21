@@ -214,6 +214,9 @@ namespace assignment_code.UI.Views
 
         private void ApplyTheme()
         {
+            BackColor = ThemeManager.Background;
+            if (_contentWrapper != null) _contentWrapper.BackColor = ThemeManager.Background;
+
             DataGridViewStyleHelper.UpdateColors(_grid);
 
             _btnRefresh.BackColor = ThemeManager.CardBackground;

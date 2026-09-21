@@ -49,20 +49,18 @@ namespace assignment_code
             // 
             // _viewsContainer
             // 
-            this._viewsContainer.BackColor = System.Drawing.Color.Transparent;
             this._viewsContainer.Dock = System.Windows.Forms.DockStyle.Fill;
-            this._viewsContainer.Location = new System.Drawing.Point(24, 82);
+            this._viewsContainer.Location = new System.Drawing.Point(24, 88);
             this._viewsContainer.Name = "_viewsContainer";
-            this._viewsContainer.Size = new System.Drawing.Size(1012, 720);
+            this._viewsContainer.Size = new System.Drawing.Size(1012, 714);
             this._viewsContainer.TabIndex = 1;
             // 
             // _topHeader
             // 
-            this._topHeader.BackColor = System.Drawing.Color.Transparent;
             this._topHeader.Dock = System.Windows.Forms.DockStyle.Top;
             this._topHeader.Location = new System.Drawing.Point(24, 14);
             this._topHeader.Name = "_topHeader";
-            this._topHeader.Size = new System.Drawing.Size(1012, 68);
+            this._topHeader.Size = new System.Drawing.Size(1012, 72);
             this._topHeader.StoreName = "PCCFPI STORE";
             this._topHeader.TabIndex = 0;
             this._topHeader.UserName = "Stephanie Sharkey";

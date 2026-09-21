@@ -37,7 +37,6 @@ namespace assignment_code.UI.Views
             // 
             // _contentWrapper
             // 
-            this._contentWrapper.BackColor = System.Drawing.Color.Transparent;
             this._contentWrapper.Controls.Add(this._btnRefresh);
             this._contentWrapper.Controls.Add(this._btnAddCategory);
             this._contentWrapper.Controls.Add(this._cardsPanel);
@@ -81,7 +80,6 @@ namespace assignment_code.UI.Views
             // _cardsPanel
             // 
             this._cardsPanel.AutoScroll = true;
-            this._cardsPanel.BackColor = System.Drawing.Color.Transparent;
             this._cardsPanel.Location = new System.Drawing.Point(0, 58);
             this._cardsPanel.Name = "_cardsPanel";
             this._cardsPanel.Size = new System.Drawing.Size(1012, 650);
@@ -91,7 +89,6 @@ namespace assignment_code.UI.Views
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.AutoScroll = true;
-            this.BackColor = System.Drawing.Color.Transparent;
             this.Controls.Add(this._contentWrapper);
             this.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Name = "CategoriesView";

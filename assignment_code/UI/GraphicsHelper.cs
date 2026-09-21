@@ -23,8 +23,15 @@ namespace assignment_code.UI
                 return cached;
             }
 
+            string asmDir = "";
+            try { asmDir = Path.GetDirectoryName(typeof(GraphicsHelper).Assembly.Location) ?? ""; } catch { }
+
             string[] candidatePaths = new[]
             {
+                Path.Combine(asmDir, "icons", $"{key}.png"),
+                Path.Combine(asmDir, "icons", (key == "en" ? "uk.png" : $"{key}.png")),
+                @"D:\PCCFP Institute\ppccfpi_files\cd-cs\assignment_code\assignment_code\icons\" + $"{key}.png",
+                @"D:\PCCFP Institute\ppccfpi_files\cd-cs\assignment_code\assignment_code\icons\" + (key == "en" ? "uk.png" : $"{key}.png"),
                 Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "icons", $"{key}.png"),
                 Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "icons", (key == "en" ? "uk.png" : $"{key}.png")),
                 Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "icons", $"{key}.png"),

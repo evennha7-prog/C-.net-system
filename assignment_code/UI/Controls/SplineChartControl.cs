@@ -40,13 +40,16 @@ namespace assignment_code.UI.Controls
             SetStyle(ControlStyles.UserPaint |
                      ControlStyles.AllPaintingInWmPaint |
                      ControlStyles.OptimizedDoubleBuffer |
-                     ControlStyles.ResizeRedraw |
-                     ControlStyles.SupportsTransparentBackColor, true);
+                     ControlStyles.ResizeRedraw, true);
 
-            BackColor = Color.Transparent;
+            BackColor = ThemeManager.Background;
             Size = new Size(420, 260);
 
-            ThemeManager.ThemeChanged += (s, e) => Invalidate();
+            ThemeManager.ThemeChanged += (s, e) =>
+            {
+                BackColor = ThemeManager.Background;
+                Invalidate();
+            };
         }
 
         public void Bind(SplineChartDataset dataset, string period = "Last 15 days")

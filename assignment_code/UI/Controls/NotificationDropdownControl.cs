@@ -31,16 +31,19 @@ namespace assignment_code.UI.Controls
             SetStyle(ControlStyles.AllPaintingInWmPaint |
                      ControlStyles.UserPaint |
                      ControlStyles.OptimizedDoubleBuffer |
-                     ControlStyles.ResizeRedraw |
-                     ControlStyles.SupportsTransparentBackColor, true);
+                     ControlStyles.ResizeRedraw, true);
 
             Size = new Size(330, 220);
-            BackColor = Color.Transparent;
+            BackColor = ThemeManager.CardBackground;
             DoubleBuffered = true;
 
             LoadDefaultNotifications();
 
-            ThemeManager.ThemeChanged += (s, e) => Invalidate();
+            ThemeManager.ThemeChanged += (s, e) =>
+            {
+                BackColor = ThemeManager.CardBackground;
+                Invalidate();
+            };
             TranslationManager.LanguageChanged += (s, e) => Invalidate();
         }
 
@@ -304,7 +307,7 @@ namespace assignment_code.UI.Controls
             Padding = Padding.Empty;
             AutoSize = false;
             DropShadowEnabled = false;
-            BackColor = Color.Transparent;
+            BackColor = ThemeManager.CardBackground;
 
             _notificationControl = new NotificationDropdownControl();
             Size = _notificationControl.Size;

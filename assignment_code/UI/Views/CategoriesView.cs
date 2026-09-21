@@ -193,10 +193,15 @@ namespace assignment_code.UI.Views
 
         private void ApplyTheme()
         {
+            BackColor = ThemeManager.Background;
+            if (_contentWrapper != null) _contentWrapper.BackColor = ThemeManager.Background;
+            if (_cardsPanel != null) _cardsPanel.BackColor = ThemeManager.Background;
+
             _btnAddCategory.BackColor = ThemeManager.AccentBlue;
             _btnRefresh.BackColor = ThemeManager.CardBackground;
             _btnRefresh.ForeColor = ThemeManager.TextPrimary;
             _btnRefresh.FlatAppearance.BorderColor = ThemeManager.BorderColor;
+            PopulateCards();
             Invalidate(true);
         }
 

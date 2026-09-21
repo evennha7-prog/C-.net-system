@@ -30,17 +30,12 @@ namespace assignment_code
         private SettingsView _settingsView;
         private Control _activeView;
 
-        protected override CreateParams CreateParams
+
+        public Form1() : this(null)
         {
-            get
-            {
-                CreateParams cp = base.CreateParams;
-                cp.ExStyle |= 0x02000000; // WS_EX_COMPOSITED (Hierarchical double-buffering)
-                return cp;
-            }
         }
 
-        public Form1(AppUser user = null)
+        public Form1(AppUser user)
         {
             InitializeComponent();
 
@@ -255,6 +250,8 @@ namespace assignment_code
         {
             BackColor = ThemeManager.Background;
             if (_mainContainer != null) _mainContainer.BackColor = ThemeManager.Background;
+            if (_viewsContainer != null) _viewsContainer.BackColor = ThemeManager.Background;
+            if (_topHeader != null) _topHeader.BackColor = ThemeManager.Background;
             if (_sidebar != null) _sidebar.BackColor = ThemeManager.SidebarBackground;
             Invalidate(true);
         }

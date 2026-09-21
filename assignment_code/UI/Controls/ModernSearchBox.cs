@@ -15,7 +15,7 @@ namespace assignment_code.UI.Controls
 
         private TextBox _innerTextBox;
         private string _placeholderText = "Enter keywords ...";
-        private int _borderRadius = 10;
+        private int _borderRadius = 9;
         private bool _isFocused = false;
 
         public event EventHandler SearchTextChanged;
@@ -65,10 +65,9 @@ namespace assignment_code.UI.Controls
             SetStyle(ControlStyles.UserPaint |
                      ControlStyles.AllPaintingInWmPaint |
                      ControlStyles.OptimizedDoubleBuffer |
-                     ControlStyles.ResizeRedraw |
-                     ControlStyles.SupportsTransparentBackColor, true);
+                     ControlStyles.ResizeRedraw, true);
 
-            BackColor = Color.Transparent;
+            BackColor = ThemeManager.CardBackground;
             Size = new Size(240, 36);
 
             _innerTextBox = new TextBox
@@ -94,34 +93,25 @@ namespace assignment_code.UI.Controls
 
             ThemeManager.ThemeChanged += (s, e) =>
             {
+                BackColor = _isHeaderStyle ? ThemeManager.CardBackground : ThemeManager.Background;
                 ApplyColors();
                 UpdateCueBanner();
                 Invalidate();
             };
+
+            ApplyColors();
         }
 
         private void ApplyColors()
         {
             if (_innerTextBox == null) return;
 
-            if (_isHeaderStyle)
-            {
-                if (ThemeManager.IsDark)
-                {
-                    _innerTextBox.BackColor = Color.FromArgb(20, 36, 70);
-                    _innerTextBox.ForeColor = Color.White;
-                }
-                else
-                {
-                    _innerTextBox.BackColor = Color.White;
-                    _innerTextBox.ForeColor = Color.FromArgb(15, 23, 42);
-                }
-            }
-            else
-            {
-                _innerTextBox.BackColor = ThemeManager.SearchBoxBackground;
-                _innerTextBox.ForeColor = ThemeManager.TextPrimary;
-            }
+            Color bgCol = ThemeManager.IsDark
+                ? ThemeManager.SearchBoxBackground
+                : (_isHeaderStyle ? Color.FromArgb(246, 248, 252) : Color.FromArgb(243, 244, 246));
+
+            _innerTextBox.BackColor = bgCol;
+            _innerTextBox.ForeColor = ThemeManager.TextPrimary;
         }
 
         private void UpdateCueBanner()
@@ -137,8 +127,9 @@ namespace assignment_code.UI.Controls
             base.OnResize(e);
             if (_innerTextBox != null)
             {
+                int rightPad = (_isHeaderStyle && Width > 220) ? 68 : 40;
                 _innerTextBox.Location = new Point(34, (Height - _innerTextBox.Height) / 2);
-                _innerTextBox.Width = Width - 44;
+                _innerTextBox.Width = Math.Max(50, Width - 34 - rightPad);
             }
         }
 
@@ -154,8 +145,11 @@ namespace assignment_code.UI.Controls
             Graphics g = e.Graphics;
             GraphicsHelper.SetHighQuality(g);
 
-            // Clear parent background
-            Color parentBg = (Parent != null && Parent.BackColor != Color.Transparent) ? Parent.BackColor : ThemeManager.Background;
+            // Clear parent background matching header card or container
+            Color parentBg = _isHeaderStyle
+                ? ThemeManager.CardBackground
+                : ((Parent != null && Parent.BackColor != Color.Transparent) ? Parent.BackColor : ThemeManager.Background);
+
             using (var parentBrush = new SolidBrush(parentBg))
             {
                 g.FillRectangle(parentBrush, ClientRectangle);
@@ -164,35 +158,15 @@ namespace assignment_code.UI.Controls
             Rectangle rect = new Rectangle(0, 0, Width - 1, Height - 1);
             if (rect.Width <= 0 || rect.Height <= 0) return;
 
-            Color bgCol;
-            Color borderCol;
-            Color iconCol;
-            Color placeCol;
+            Color bgCol = ThemeManager.IsDark
+                ? ThemeManager.SearchBoxBackground
+                : (_isHeaderStyle ? Color.FromArgb(246, 248, 252) : Color.FromArgb(243, 244, 246));
 
-            if (_isHeaderStyle)
-            {
-                if (ThemeManager.IsDark)
-                {
-                    bgCol = Color.FromArgb(20, 36, 70);
-                    borderCol = _isFocused ? Color.FromArgb(96, 165, 250) : Color.FromArgb(45, 75, 130);
-                    iconCol = Color.FromArgb(147, 197, 253);
-                    placeCol = Color.FromArgb(148, 163, 184);
-                }
-                else
-                {
-                    bgCol = Color.White;
-                    borderCol = _isFocused ? Color.FromArgb(37, 99, 235) : Color.FromArgb(219, 234, 254);
-                    iconCol = Color.FromArgb(37, 99, 235);
-                    placeCol = Color.FromArgb(148, 163, 184);
-                }
-            }
-            else
-            {
-                bgCol = ThemeManager.SearchBoxBackground;
-                borderCol = _isFocused ? ThemeManager.AccentBlue : ThemeManager.SearchBoxBorder;
-                iconCol = ThemeManager.TextMuted;
-                placeCol = ThemeManager.TextMuted;
-            }
+            Color borderCol = _isFocused
+                ? ThemeManager.AccentBlue
+                : (ThemeManager.IsDark ? ThemeManager.SearchBoxBorder : Color.FromArgb(226, 232, 240));
+
+            Color iconCol = _isFocused ? ThemeManager.AccentBlue : ThemeManager.TextMuted;
 
             using (GraphicsPath path = GraphicsHelper.GetRoundedRectanglePath(rect, _borderRadius))
             {
@@ -214,13 +188,27 @@ namespace assignment_code.UI.Controls
             Rectangle iconRect = new Rectangle(11, (Height - 16) / 2, 16, 16);
             GraphicsHelper.DrawIcon(g, "search", iconRect, iconCol, 1.6f);
 
-            // Draw Placeholder if text is empty and not focused
-            if (string.IsNullOrEmpty(_innerTextBox.Text) && !_isFocused)
+            // Draw "Ctrl K" shortcut hint pill on right
+            if (_isHeaderStyle && Width > 210 && !_isFocused && string.IsNullOrEmpty(_innerTextBox.Text))
             {
-                using (Font pFont = FontHelper.CreateFont(9F, FontStyle.Regular))
-                using (SolidBrush pBrush = new SolidBrush(placeCol))
+                int kBadgeW = 48;
+                int kBadgeH = 20;
+                int kBadgeX = Width - kBadgeW - 8;
+                int kBadgeY = (Height - kBadgeH) / 2;
+                Rectangle kRect = new Rectangle(kBadgeX, kBadgeY, kBadgeW, kBadgeH);
+
+                using (GraphicsPath kp = GraphicsHelper.GetRoundedRectanglePath(kRect, 5))
                 {
-                    g.DrawString(_placeholderText, pFont, pBrush, 34, (Height - pFont.Height) / 2);
+                    Color kBg = ThemeManager.IsDark ? Color.FromArgb(28, 36, 56) : Color.FromArgb(235, 240, 248);
+                    using (SolidBrush kb = new SolidBrush(kBg)) g.FillPath(kb, kp);
+                    using (Pen kpen = new Pen(ThemeManager.BorderColor, 1f)) g.DrawPath(kpen, kp);
+                }
+
+                using (Font kFont = FontHelper.CreateFont(7.5F, FontStyle.Bold))
+                using (SolidBrush kt = new SolidBrush(ThemeManager.TextMuted))
+                {
+                    var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+                    g.DrawString("Ctrl K", kFont, kt, kRect, sf);
                 }
             }
         }

@@ -191,6 +191,9 @@ namespace assignment_code.UI.Views
                 GraphicsHelper.SetHighQuality(g);
 
                 Rectangle r = new Rectangle(0, 0, card.Width - 1, card.Height - 1);
+                using (SolidBrush parentBrush = new SolidBrush(ThemeManager.Background))
+                    g.FillRectangle(parentBrush, card.ClientRectangle);
+
                 using (GraphicsPath p = GraphicsHelper.GetRoundedRectanglePath(r, 12))
                 {
                     using (SolidBrush bg = new SolidBrush(ThemeManager.CardBackground)) g.FillPath(bg, p);
@@ -216,6 +219,13 @@ namespace assignment_code.UI.Views
 
         private void ApplyTheme()
         {
+            BackColor = ThemeManager.Background;
+            if (_contentWrapper != null) _contentWrapper.BackColor = ThemeManager.Background;
+            if (_kpi1 != null) _kpi1.BackColor = ThemeManager.CardBackground;
+            if (_kpi2 != null) _kpi2.BackColor = ThemeManager.CardBackground;
+            if (_kpi3 != null) _kpi3.BackColor = ThemeManager.CardBackground;
+            if (_kpi4 != null) _kpi4.BackColor = ThemeManager.CardBackground;
+
             _btnExport.BackColor = ThemeManager.AccentBlue;
             _topProductsCard.BackColor = ThemeManager.CardBackground;
             _financialBreakdownCard.BackColor = ThemeManager.CardBackground;

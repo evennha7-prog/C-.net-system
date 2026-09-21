@@ -25,14 +25,17 @@ namespace assignment_code.UI.Controls
             SetStyle(ControlStyles.UserPaint |
                      ControlStyles.AllPaintingInWmPaint |
                      ControlStyles.OptimizedDoubleBuffer |
-                     ControlStyles.ResizeRedraw |
-                     ControlStyles.SupportsTransparentBackColor, true);
+                     ControlStyles.ResizeRedraw, true);
 
-            BackColor = Color.Transparent;
+            BackColor = ThemeManager.Background;
             Size = new Size(220, 130);
             Font = FontHelper.CreateFont(9F, FontStyle.Regular);
 
-            ThemeManager.ThemeChanged += (s, e) => Invalidate();
+            ThemeManager.ThemeChanged += (s, e) =>
+            {
+                BackColor = ThemeManager.Background;
+                Invalidate();
+            };
         }
 
         public void Bind(KpiStat stat)

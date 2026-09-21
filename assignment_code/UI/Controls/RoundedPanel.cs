@@ -54,20 +54,20 @@ namespace assignment_code.UI.Controls
             SetStyle(ControlStyles.UserPaint |
                      ControlStyles.AllPaintingInWmPaint |
                      ControlStyles.OptimizedDoubleBuffer |
-                     ControlStyles.ResizeRedraw |
-                     ControlStyles.SupportsTransparentBackColor, true);
+                     ControlStyles.ResizeRedraw, true);
 
-            BackColor = Color.Transparent;
+            BackColor = ThemeManager.Background;
             Padding = new Padding(12);
 
             ThemeManager.ThemeChanged += (s, e) =>
             {
+                BackColor = ThemeManager.Background;
                 if (_useThemeColors)
                 {
                     _fillColor = ThemeManager.CardBackground;
                     _borderColor = ThemeManager.BorderColor;
-                    Invalidate();
                 }
+                Invalidate();
             };
         }
 
