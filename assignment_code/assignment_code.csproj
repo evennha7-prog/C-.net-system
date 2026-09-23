@@ -12,7 +12,7 @@
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
-    <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
+    <ResolveNuGetPackages>false</ResolveNuGetPackages>
     <ApplicationIcon>icons\app.ico</ApplicationIcon>
     <CscToolPath Condition="'$(CscToolPath)' == '' and Exists('$(MSBuildThisFileDirectory)..\packages\Microsoft.Net.Compilers.Toolset.4.8.0\tasks\net472\csc.exe')">$(MSBuildThisFileDirectory)..\packages\Microsoft.Net.Compilers.Toolset.4.8.0\tasks\net472</CscToolPath>
   </PropertyGroup>

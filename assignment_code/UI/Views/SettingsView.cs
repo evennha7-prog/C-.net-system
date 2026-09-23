@@ -138,13 +138,13 @@ namespace assignment_code.UI.Views
             _databaseCard = new Panel { BackColor = ThemeManager.CardBackground };
             _databaseCard.Paint += (s, e) => DrawCardBackground(e.Graphics, _databaseCard, TranslationManager.T("DatabaseSettings", "Database & Migration"));
 
-            string host = EnvLoader.Get("DB_HOST", "pg-2718aec6-evennha7-6e4c.j.aivencloud.com");
-            string port = EnvLoader.Get("DB_PORT", "14495");
-            string db = EnvLoader.Get("DB_DATABASE", "codeassignment_db");
+            string serverName = DbConnectionHelper.ServerDisplayName;
+            string db = EnvLoader.Get("DB_DATABASE", "mart_pccfpi");
+            string provider = DbConnectionHelper.ProviderDisplayName;
 
             _lblDbHost = new Label
             {
-                Text = $"Host: {host}:{port}",
+                Text = $"Server / Host: {serverName}",
                 Left = 20,
                 Top = 48,
                 Width = 450,
@@ -154,7 +154,7 @@ namespace assignment_code.UI.Views
 
             _lblDbName = new Label
             {
-                Text = $"Database: {db} (PostgreSQL)",
+                Text = $"Database: {db} ({provider})",
                 Left = 20,
                 Top = 72,
                 Width = 450,
@@ -214,7 +214,7 @@ namespace assignment_code.UI.Views
                 Font = new Font("Consolas", 8.5F),
                 BackColor = ThemeManager.SearchBoxBackground,
                 ForeColor = ThemeManager.TextPrimary,
-                Text = "Click 'Migrate Database Now' or 'Test DB Connection' to execute PostgreSQL operations."
+                Text = "Click 'Migrate Database Now' or 'Test DB Connection' to execute database operations."
             };
 
             _databaseCard.Controls.AddRange(new Control[] { _lblDbHost, _lblDbName, _lblDbStatus, _btnTestDb, _btnMigrateDb, _txtDbLog });
@@ -246,12 +246,12 @@ namespace assignment_code.UI.Views
         private async Task TestConnectionAsync()
         {
             _btnTestDb.Enabled = false;
-            _lblDbStatus.Text = "â³ Testing connection...";
+            _lblDbStatus.Text = "Testing connection...";
             _lblDbStatus.ForeColor = ThemeManager.WarningYellow;
 
-            string msg;
-            long elapsed;
             bool ok = false;
+            string msg = "";
+            long elapsed = 0;
 
             await Task.Run(() =>
             {
@@ -264,18 +264,21 @@ namespace assignment_code.UI.Views
                 _lblDbStatus.Text = "● Status: Connected (Online)";
                 _lblDbStatus.ForeColor = ThemeManager.SuccessGreen;
                 _txtDbLog.Text = $"[{DateTime.Now:HH:mm:ss}] Connection successful!\n" +
-                                 $"Host: {EnvLoader.Get("DB_HOST")}\n" +
-                                 $"Database: {EnvLoader.Get("DB_DATABASE")}\n" +
-                                 $"Port: {EnvLoader.Get("DB_PORT")}";
+                                 $"Provider: {DbConnectionHelper.ProviderDisplayName}\n" +
+                                 $"Server: {DbConnectionHelper.ServerDisplayName}\n" +
+                                 $"Database: {EnvLoader.Get("DB_DATABASE")}\n\n" +
+                                 $"{msg}";
             }
             else
             {
                 _lblDbStatus.Text = "● Status: Connection Failed";
                 _lblDbStatus.ForeColor = ThemeManager.DangerRed;
-                _txtDbLog.Text = $"[{DateTime.Now:HH:mm:ss}] Connection failed ({elapsed}ms):\n{msg}\n\n" +
-                                 $"Host: {EnvLoader.Get("DB_HOST")}\n" +
-                                 $"Port: {EnvLoader.Get("DB_PORT")}\n" +
-                                 $"User: {EnvLoader.Get("DB_USERNAME")}";
+                var logMsg = msg;
+                var logElapsed = elapsed;
+                _txtDbLog.Text = $"[{DateTime.Now:HH:mm:ss}] Connection failed ({logElapsed}ms):\n{logMsg}\n\n" +
+                                 $"Provider: {DbConnectionHelper.ProviderDisplayName}\n" +
+                                 $"Server: {DbConnectionHelper.ServerDisplayName}\n" +
+                                 $"Database: {EnvLoader.Get("DB_DATABASE")}";
             }
         }
 

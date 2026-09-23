@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
 using assignment_code.Models;
 using assignment_code.Services.Database;
-using Npgsql;
 
 namespace assignment_code.Services
 {
@@ -37,10 +37,10 @@ namespace assignment_code.Services
 
         public void LoadData()
         {
-            // 1. Ensure DB schema exists on PostgreSQL
+            // 1. Ensure DB schema exists
             EnsureDatabaseSchema();
 
-            // 2. Load live data from PostgreSQL
+            // 2. Load live data from Database
             bool loadedFromDb = TryLoadFromDatabase();
             if (!loadedFromDb || Products.Count == 0)
             {
@@ -58,12 +58,13 @@ namespace assignment_code.Services
                     conn.Open();
                     IsDatabaseConnected = true;
 
-                    // Check if 'products' table exists
+                    // Check if 'products' table exists (works on both SQL Server & PostgreSQL)
                     bool exists = false;
-                    using (var cmd = new NpgsqlCommand("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'products');", conn))
+                    using (var cmd = conn.CreateCommand())
                     {
+                        cmd.CommandText = "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'products'";
                         var res = cmd.ExecuteScalar();
-                        if (res is bool b && b) exists = true;
+                        if (res != null && Convert.ToInt32(res) > 0) exists = true;
                     }
 
                     if (!exists)
@@ -92,19 +93,22 @@ namespace assignment_code.Services
                     // 1. Load Store Settings
                     try
                     {
-                        using (var cmd = new NpgsqlCommand("SELECT store_name, phone, email, address, currency_symbol, tax_rate_percentage, receipt_header, receipt_footer FROM store_settings WHERE id = 1", conn))
-                        using (var reader = cmd.ExecuteReader())
+                        using (var cmd = conn.CreateCommand())
                         {
-                            if (reader.Read())
+                            cmd.CommandText = "SELECT store_name, phone, email, address, currency_symbol, tax_rate_percentage, receipt_header, receipt_footer FROM store_settings WHERE id = 1";
+                            using (var reader = cmd.ExecuteReader())
                             {
-                                Settings.StoreName = reader.IsDBNull(0) ? "PCCFPI STORE" : reader.GetString(0);
-                                Settings.Phone = reader.IsDBNull(1) ? "+855 23 888 999" : reader.GetString(1);
-                                Settings.Email = reader.IsDBNull(2) ? "support@pccfpistore.com" : reader.GetString(2);
-                                Settings.Address = reader.IsDBNull(3) ? "Phnom Penh, Cambodia" : reader.GetString(3);
-                                Settings.CurrencySymbol = reader.IsDBNull(4) ? "$" : reader.GetString(4);
-                                Settings.TaxRatePercentage = reader.IsDBNull(5) ? 10m : reader.GetDecimal(5);
-                                Settings.ReceiptHeader = reader.IsDBNull(6) ? "PCCFPI STORE OFFICIAL RECEIPT" : reader.GetString(6);
-                                Settings.ReceiptFooter = reader.IsDBNull(7) ? "Thank you for shopping with us!" : reader.GetString(7);
+                                if (reader.Read())
+                                {
+                                    Settings.StoreName = reader.IsDBNull(0) ? "PCCFPI STORE" : reader.GetString(0);
+                                    Settings.Phone = reader.IsDBNull(1) ? "+855 23 888 999" : reader.GetString(1);
+                                    Settings.Email = reader.IsDBNull(2) ? "support@pccfpistore.com" : reader.GetString(2);
+                                    Settings.Address = reader.IsDBNull(3) ? "Phnom Penh, Cambodia" : reader.GetString(3);
+                                    Settings.CurrencySymbol = reader.IsDBNull(4) ? "$" : reader.GetString(4);
+                                    Settings.TaxRatePercentage = reader.IsDBNull(5) ? 10m : reader.GetDecimal(5);
+                                    Settings.ReceiptHeader = reader.IsDBNull(6) ? "PCCFPI STORE OFFICIAL RECEIPT" : reader.GetString(6);
+                                    Settings.ReceiptFooter = reader.IsDBNull(7) ? "Thank you for shopping with us!" : reader.GetString(7);
+                                }
                             }
                         }
                     }
@@ -112,130 +116,148 @@ namespace assignment_code.Services
 
                     // 2. Load Categories
                     var categories = new List<Category>();
-                    using (var cmd = new NpgsqlCommand("SELECT id, name, description, product_count, total_revenue, color_hex FROM categories ORDER BY id", conn))
-                    using (var reader = cmd.ExecuteReader())
+                    using (var cmd = conn.CreateCommand())
                     {
-                        while (reader.Read())
+                        cmd.CommandText = "SELECT id, name, description, product_count, total_revenue, color_hex FROM categories ORDER BY id";
+                        using (var reader = cmd.ExecuteReader())
                         {
-                            categories.Add(new Category
+                            while (reader.Read())
                             {
-                                Id = reader.GetString(0),
-                                Name = reader.GetString(1),
-                                Description = reader.IsDBNull(2) ? "" : reader.GetString(2),
-                                ProductCount = reader.IsDBNull(3) ? 0 : reader.GetInt32(3),
-                                TotalRevenue = reader.IsDBNull(4) ? 0m : reader.GetDecimal(4),
-                                ColorHex = reader.IsDBNull(5) ? "#3B82F6" : reader.GetString(5)
-                            });
+                                categories.Add(new Category
+                                {
+                                    Id = reader.GetString(0),
+                                    Name = reader.GetString(1),
+                                    Description = reader.IsDBNull(2) ? "" : reader.GetString(2),
+                                    ProductCount = reader.IsDBNull(3) ? 0 : reader.GetInt32(3),
+                                    TotalRevenue = reader.IsDBNull(4) ? 0m : reader.GetDecimal(4),
+                                    ColorHex = reader.IsDBNull(5) ? "#3B82F6" : reader.GetString(5)
+                                });
+                            }
                         }
                     }
                     if (categories.Count > 0) Categories = categories;
 
                     // 3. Load Products
                     var products = new List<Product>();
-                    using (var cmd = new NpgsqlCommand("SELECT id, sku, name, category, price, cost, stock, status, date_added FROM products ORDER BY id", conn))
-                    using (var reader = cmd.ExecuteReader())
+                    using (var cmd = conn.CreateCommand())
                     {
-                        while (reader.Read())
+                        cmd.CommandText = "SELECT id, sku, name, category, price, cost, stock, status, date_added FROM products ORDER BY id";
+                        using (var reader = cmd.ExecuteReader())
                         {
-                            products.Add(new Product
+                            while (reader.Read())
                             {
-                                Id = reader.GetString(0),
-                                Sku = reader.IsDBNull(1) ? "" : reader.GetString(1),
-                                Name = reader.GetString(2),
-                                Category = reader.IsDBNull(3) ? "General" : reader.GetString(3),
-                                Price = reader.IsDBNull(4) ? 0m : reader.GetDecimal(4),
-                                Cost = reader.IsDBNull(5) ? 0m : reader.GetDecimal(5),
-                                Stock = reader.IsDBNull(6) ? 0 : reader.GetInt32(6),
-                                Status = reader.IsDBNull(7) ? "In Stock" : reader.GetString(7),
-                                DateAdded = reader.IsDBNull(8) ? DateTime.Now.ToString("dd MMM yyyy") : reader.GetString(8)
-                            });
+                                products.Add(new Product
+                                {
+                                    Id = reader.GetString(0),
+                                    Sku = reader.IsDBNull(1) ? "" : reader.GetString(1),
+                                    Name = reader.GetString(2),
+                                    Category = reader.IsDBNull(3) ? "General" : reader.GetString(3),
+                                    Price = reader.IsDBNull(4) ? 0m : reader.GetDecimal(4),
+                                    Cost = reader.IsDBNull(5) ? 0m : reader.GetDecimal(5),
+                                    Stock = reader.IsDBNull(6) ? 0 : reader.GetInt32(6),
+                                    Status = reader.IsDBNull(7) ? "In Stock" : reader.GetString(7),
+                                    DateAdded = reader.IsDBNull(8) ? DateTime.Now.ToString("dd MMM yyyy") : reader.GetString(8)
+                                });
+                            }
                         }
                     }
                     if (products.Count > 0) Products = products;
 
                     // 4. Load Customers
                     var customers = new List<Customer>();
-                    using (var cmd = new NpgsqlCommand("SELECT id, full_name, email, phone, total_orders, total_spent, tier, status FROM customers ORDER BY id", conn))
-                    using (var reader = cmd.ExecuteReader())
+                    using (var cmd = conn.CreateCommand())
                     {
-                        while (reader.Read())
+                        cmd.CommandText = "SELECT id, full_name, email, phone, total_orders, total_spent, tier, status FROM customers ORDER BY id";
+                        using (var reader = cmd.ExecuteReader())
                         {
-                            customers.Add(new Customer
+                            while (reader.Read())
                             {
-                                Id = reader.GetString(0),
-                                FullName = reader.GetString(1),
-                                Email = reader.IsDBNull(2) ? "" : reader.GetString(2),
-                                Phone = reader.IsDBNull(3) ? "" : reader.GetString(3),
-                                TotalOrders = reader.IsDBNull(4) ? 0 : reader.GetInt32(4),
-                                TotalSpent = reader.IsDBNull(5) ? 0m : reader.GetDecimal(5),
-                                Tier = reader.IsDBNull(6) ? "Regular" : reader.GetString(6),
-                                Status = reader.IsDBNull(7) ? "Active" : reader.GetString(7)
-                            });
+                                customers.Add(new Customer
+                                {
+                                    Id = reader.GetString(0),
+                                    FullName = reader.GetString(1),
+                                    Email = reader.IsDBNull(2) ? "" : reader.GetString(2),
+                                    Phone = reader.IsDBNull(3) ? "" : reader.GetString(3),
+                                    TotalOrders = reader.IsDBNull(4) ? 0 : reader.GetInt32(4),
+                                    TotalSpent = reader.IsDBNull(5) ? 0m : reader.GetDecimal(5),
+                                    Tier = reader.IsDBNull(6) ? "Regular" : reader.GetString(6),
+                                    Status = reader.IsDBNull(7) ? "Active" : reader.GetString(7)
+                                });
+                            }
                         }
                     }
                     if (customers.Count > 0) Customers = customers;
 
                     // 5. Load Users
                     var users = new List<AppUser>();
-                    using (var cmd = new NpgsqlCommand("SELECT id, full_name, email, role, status, last_login FROM users ORDER BY id", conn))
-                    using (var reader = cmd.ExecuteReader())
+                    using (var cmd = conn.CreateCommand())
                     {
-                        while (reader.Read())
+                        cmd.CommandText = "SELECT id, full_name, email, role, status, last_login FROM users ORDER BY id";
+                        using (var reader = cmd.ExecuteReader())
                         {
-                            users.Add(new AppUser
+                            while (reader.Read())
                             {
-                                Id = reader.GetString(0),
-                                FullName = reader.GetString(1),
-                                Email = reader.GetString(2),
-                                Role = reader.IsDBNull(3) ? "Store Staff" : reader.GetString(3),
-                                Status = reader.IsDBNull(4) ? "Active" : reader.GetString(4),
-                                LastLogin = reader.IsDBNull(5) ? DateTime.Now : reader.GetDateTime(5)
-                            });
+                                users.Add(new AppUser
+                                {
+                                    Id = reader.GetString(0),
+                                    FullName = reader.GetString(1),
+                                    Email = reader.GetString(2),
+                                    Role = reader.IsDBNull(3) ? "Store Staff" : reader.GetString(3),
+                                    Status = reader.IsDBNull(4) ? "Active" : reader.GetString(4),
+                                    LastLogin = reader.IsDBNull(5) ? DateTime.Now : reader.GetDateTime(5)
+                                });
+                            }
                         }
                     }
                     if (users.Count > 0) Users = users;
 
                     // 6. Load Orders
                     var orders = new List<Order>();
-                    using (var cmd = new NpgsqlCommand("SELECT order_id, customer_name, items_summary, total_amount, status, payment_status, order_date FROM orders ORDER BY order_date DESC", conn))
-                    using (var reader = cmd.ExecuteReader())
+                    using (var cmd = conn.CreateCommand())
                     {
-                        while (reader.Read())
+                        cmd.CommandText = "SELECT order_id, customer_name, items_summary, total_amount, status, payment_status, order_date FROM orders ORDER BY order_date DESC";
+                        using (var reader = cmd.ExecuteReader())
                         {
-                            orders.Add(new Order
+                            while (reader.Read())
                             {
-                                OrderId = reader.GetString(0),
-                                CustomerName = reader.GetString(1),
-                                ItemsSummary = reader.IsDBNull(2) ? "" : reader.GetString(2),
-                                TotalAmount = reader.IsDBNull(3) ? 0m : reader.GetDecimal(3),
-                                Status = reader.IsDBNull(4) ? "Pending" : reader.GetString(4),
-                                PaymentStatus = reader.IsDBNull(5) ? "Unpaid" : reader.GetString(5),
-                                OrderDate = reader.IsDBNull(6) ? DateTime.Now : reader.GetDateTime(6)
-                            });
+                                orders.Add(new Order
+                                {
+                                    OrderId = reader.GetString(0),
+                                    CustomerName = reader.GetString(1),
+                                    ItemsSummary = reader.IsDBNull(2) ? "" : reader.GetString(2),
+                                    TotalAmount = reader.IsDBNull(3) ? 0m : reader.GetDecimal(3),
+                                    Status = reader.IsDBNull(4) ? "Pending" : reader.GetString(4),
+                                    PaymentStatus = reader.IsDBNull(5) ? "Unpaid" : reader.GetString(5),
+                                    OrderDate = reader.IsDBNull(6) ? DateTime.Now : reader.GetDateTime(6)
+                                });
+                            }
                         }
                     }
                     if (orders.Count > 0) Orders = orders;
 
                     // 7. Load Sales Transactions
                     var sales = new List<SaleTransaction>();
-                    using (var cmd = new NpgsqlCommand("SELECT invoice_no, customer_name, subtotal, tax_amount, discount_amount, total_amount, payment_method, status, timestamp FROM sales ORDER BY timestamp DESC", conn))
-                    using (var reader = cmd.ExecuteReader())
+                    using (var cmd = conn.CreateCommand())
                     {
-                        while (reader.Read())
+                        cmd.CommandText = "SELECT invoice_no, customer_name, subtotal, tax_amount, discount_amount, total_amount, payment_method, status, timestamp FROM sales ORDER BY timestamp DESC";
+                        using (var reader = cmd.ExecuteReader())
                         {
-                            sales.Add(new SaleTransaction
+                            while (reader.Read())
                             {
-                                InvoiceNo = reader.GetString(0),
-                                CustomerName = reader.GetString(1),
-                                Subtotal = reader.IsDBNull(2) ? 0m : reader.GetDecimal(2),
-                                TaxAmount = reader.IsDBNull(3) ? 0m : reader.GetDecimal(3),
-                                DiscountAmount = reader.IsDBNull(4) ? 0m : reader.GetDecimal(4),
-                                TotalAmount = reader.IsDBNull(5) ? 0m : reader.GetDecimal(5),
-                                PaymentMethod = reader.IsDBNull(6) ? "Cash" : reader.GetString(6),
-                                Status = reader.IsDBNull(7) ? "Completed" : reader.GetString(7),
-                                Timestamp = reader.IsDBNull(8) ? DateTime.Now : reader.GetDateTime(8),
-                                Items = new List<CartItem>()
-                            });
+                                sales.Add(new SaleTransaction
+                                {
+                                    InvoiceNo = reader.GetString(0),
+                                    CustomerName = reader.GetString(1),
+                                    Subtotal = reader.IsDBNull(2) ? 0m : reader.GetDecimal(2),
+                                    TaxAmount = reader.IsDBNull(3) ? 0m : reader.GetDecimal(3),
+                                    DiscountAmount = reader.IsDBNull(4) ? 0m : reader.GetDecimal(4),
+                                    TotalAmount = reader.IsDBNull(5) ? 0m : reader.GetDecimal(5),
+                                    PaymentMethod = reader.IsDBNull(6) ? "Cash" : reader.GetString(6),
+                                    Status = reader.IsDBNull(7) ? "Completed" : reader.GetString(7),
+                                    Timestamp = reader.IsDBNull(8) ? DateTime.Now : reader.GetDateTime(8),
+                                    Items = new List<CartItem>()
+                                });
+                            }
                         }
                     }
                     if (sales.Count > 0) Sales = sales;
@@ -304,7 +326,7 @@ namespace assignment_code.Services
         }
 
         // ==========================================
-        // 1. PRODUCT CRUD OPERATIONS (CREATE / READ / UPDATE / DELETE)
+        // 1. PRODUCT CRUD OPERATIONS
         // ==========================================
         public void AddProduct(Product product)
         {
@@ -324,20 +346,28 @@ namespace assignment_code.Services
                 using (var conn = DbConnectionHelper.CreateConnection())
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand(
-                        "INSERT INTO products (id, sku, name, category, price, cost, stock, status, date_added) " +
-                        "VALUES (@id, @sku, @name, @cat, @price, @cost, @stock, @status, @date) " +
-                        "ON CONFLICT (id) DO UPDATE SET sku=EXCLUDED.sku, name=EXCLUDED.name, category=EXCLUDED.category, price=EXCLUDED.price, cost=EXCLUDED.cost, stock=EXCLUDED.stock, status=EXCLUDED.status", conn))
+                    string sql = DbConnectionHelper.IsSqlServer ?
+                        @"IF EXISTS (SELECT 1 FROM products WHERE id = @id)
+                            UPDATE products SET sku=@sku, name=@name, category=@cat, price=@price, cost=@cost, stock=@stock, status=@status WHERE id=@id
+                          ELSE
+                            INSERT INTO products (id, sku, name, category, price, cost, stock, status, date_added) VALUES (@id, @sku, @name, @cat, @price, @cost, @stock, @status, @date);"
+                        :
+                        @"INSERT INTO products (id, sku, name, category, price, cost, stock, status, date_added) 
+                          VALUES (@id, @sku, @name, @cat, @price, @cost, @stock, @status, @date) 
+                          ON CONFLICT (id) DO UPDATE SET sku=EXCLUDED.sku, name=EXCLUDED.name, category=EXCLUDED.category, price=EXCLUDED.price, cost=EXCLUDED.cost, stock=EXCLUDED.stock, status=EXCLUDED.status;";
+
+                    using (var cmd = conn.CreateCommand())
                     {
-                        cmd.Parameters.AddWithValue("@id", product.Id);
-                        cmd.Parameters.AddWithValue("@sku", product.Sku ?? "");
-                        cmd.Parameters.AddWithValue("@name", product.Name ?? "");
-                        cmd.Parameters.AddWithValue("@cat", product.Category ?? "General");
-                        cmd.Parameters.AddWithValue("@price", product.Price);
-                        cmd.Parameters.AddWithValue("@cost", product.Cost);
-                        cmd.Parameters.AddWithValue("@stock", product.Stock);
-                        cmd.Parameters.AddWithValue("@status", product.Status ?? "In Stock");
-                        cmd.Parameters.AddWithValue("@date", product.DateAdded);
+                        cmd.CommandText = sql;
+                        cmd.AddParam("@id", product.Id);
+                        cmd.AddParam("@sku", product.Sku ?? "");
+                        cmd.AddParam("@name", product.Name ?? "");
+                        cmd.AddParam("@cat", product.Category ?? "General");
+                        cmd.AddParam("@price", product.Price);
+                        cmd.AddParam("@cost", product.Cost);
+                        cmd.AddParam("@stock", product.Stock);
+                        cmd.AddParam("@status", product.Status ?? "In Stock");
+                        cmd.AddParam("@date", product.DateAdded);
                         cmd.ExecuteNonQuery();
                     }
                 }
@@ -370,17 +400,17 @@ namespace assignment_code.Services
                 using (var conn = DbConnectionHelper.CreateConnection())
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand(
-                        "UPDATE products SET sku=@sku, name=@name, category=@cat, price=@price, cost=@cost, stock=@stock, status=@status WHERE id=@id", conn))
+                    using (var cmd = conn.CreateCommand())
                     {
-                        cmd.Parameters.AddWithValue("@id", product.Id);
-                        cmd.Parameters.AddWithValue("@sku", product.Sku ?? "");
-                        cmd.Parameters.AddWithValue("@name", product.Name ?? "");
-                        cmd.Parameters.AddWithValue("@cat", product.Category ?? "General");
-                        cmd.Parameters.AddWithValue("@price", product.Price);
-                        cmd.Parameters.AddWithValue("@cost", product.Cost);
-                        cmd.Parameters.AddWithValue("@stock", product.Stock);
-                        cmd.Parameters.AddWithValue("@status", product.Status ?? "In Stock");
+                        cmd.CommandText = "UPDATE products SET sku=@sku, name=@name, category=@cat, price=@price, cost=@cost, stock=@stock, status=@status WHERE id=@id";
+                        cmd.AddParam("@id", product.Id);
+                        cmd.AddParam("@sku", product.Sku ?? "");
+                        cmd.AddParam("@name", product.Name ?? "");
+                        cmd.AddParam("@cat", product.Category ?? "General");
+                        cmd.AddParam("@price", product.Price);
+                        cmd.AddParam("@cost", product.Cost);
+                        cmd.AddParam("@stock", product.Stock);
+                        cmd.AddParam("@status", product.Status ?? "In Stock");
                         cmd.ExecuteNonQuery();
                     }
                 }
@@ -400,9 +430,10 @@ namespace assignment_code.Services
                 using (var conn = DbConnectionHelper.CreateConnection())
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand("DELETE FROM products WHERE id = @id", conn))
+                    using (var cmd = conn.CreateCommand())
                     {
-                        cmd.Parameters.AddWithValue("@id", id);
+                        cmd.CommandText = "DELETE FROM products WHERE id = @id";
+                        cmd.AddParam("@id", id);
                         cmd.ExecuteNonQuery();
                     }
                 }
@@ -431,17 +462,25 @@ namespace assignment_code.Services
                 using (var conn = DbConnectionHelper.CreateConnection())
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand(
-                        "INSERT INTO categories (id, name, description, product_count, total_revenue, color_hex) " +
-                        "VALUES (@id, @name, @desc, @pcount, @rev, @color) " +
-                        "ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, description=EXCLUDED.description, color_hex=EXCLUDED.color_hex", conn))
+                    string sql = DbConnectionHelper.IsSqlServer ?
+                        @"IF EXISTS (SELECT 1 FROM categories WHERE id = @id)
+                            UPDATE categories SET name=@name, description=@desc, color_hex=@color WHERE id=@id
+                          ELSE
+                            INSERT INTO categories (id, name, description, product_count, total_revenue, color_hex) VALUES (@id, @name, @desc, @pcount, @rev, @color);"
+                        :
+                        @"INSERT INTO categories (id, name, description, product_count, total_revenue, color_hex) 
+                          VALUES (@id, @name, @desc, @pcount, @rev, @color) 
+                          ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, description=EXCLUDED.description, color_hex=EXCLUDED.color_hex;";
+
+                    using (var cmd = conn.CreateCommand())
                     {
-                        cmd.Parameters.AddWithValue("@id", category.Id);
-                        cmd.Parameters.AddWithValue("@name", category.Name ?? "");
-                        cmd.Parameters.AddWithValue("@desc", category.Description ?? "");
-                        cmd.Parameters.AddWithValue("@pcount", category.ProductCount);
-                        cmd.Parameters.AddWithValue("@rev", category.TotalRevenue);
-                        cmd.Parameters.AddWithValue("@color", category.ColorHex ?? "#3B82F6");
+                        cmd.CommandText = sql;
+                        cmd.AddParam("@id", category.Id);
+                        cmd.AddParam("@name", category.Name ?? "");
+                        cmd.AddParam("@desc", category.Description ?? "");
+                        cmd.AddParam("@pcount", category.ProductCount);
+                        cmd.AddParam("@rev", category.TotalRevenue);
+                        cmd.AddParam("@color", category.ColorHex ?? "#3B82F6");
                         cmd.ExecuteNonQuery();
                     }
                 }
@@ -469,13 +508,13 @@ namespace assignment_code.Services
                 using (var conn = DbConnectionHelper.CreateConnection())
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand(
-                        "UPDATE categories SET name=@name, description=@desc, color_hex=@color WHERE id=@id", conn))
+                    using (var cmd = conn.CreateCommand())
                     {
-                        cmd.Parameters.AddWithValue("@id", category.Id);
-                        cmd.Parameters.AddWithValue("@name", category.Name ?? "");
-                        cmd.Parameters.AddWithValue("@desc", category.Description ?? "");
-                        cmd.Parameters.AddWithValue("@color", category.ColorHex ?? "#3B82F6");
+                        cmd.CommandText = "UPDATE categories SET name=@name, description=@desc, color_hex=@color WHERE id=@id";
+                        cmd.AddParam("@id", category.Id);
+                        cmd.AddParam("@name", category.Name ?? "");
+                        cmd.AddParam("@desc", category.Description ?? "");
+                        cmd.AddParam("@color", category.ColorHex ?? "#3B82F6");
                         cmd.ExecuteNonQuery();
                     }
                 }
@@ -495,9 +534,10 @@ namespace assignment_code.Services
                 using (var conn = DbConnectionHelper.CreateConnection())
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand("DELETE FROM categories WHERE id = @id", conn))
+                    using (var cmd = conn.CreateCommand())
                     {
-                        cmd.Parameters.AddWithValue("@id", id);
+                        cmd.CommandText = "DELETE FROM categories WHERE id = @id";
+                        cmd.AddParam("@id", id);
                         cmd.ExecuteNonQuery();
                     }
                 }
@@ -526,19 +566,27 @@ namespace assignment_code.Services
                 using (var conn = DbConnectionHelper.CreateConnection())
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand(
-                        "INSERT INTO customers (id, full_name, email, phone, total_orders, total_spent, tier, status) " +
-                        "VALUES (@id, @name, @email, @phone, @orders, @spent, @tier, @status) " +
-                        "ON CONFLICT (id) DO UPDATE SET full_name=EXCLUDED.full_name, email=EXCLUDED.email, phone=EXCLUDED.phone, tier=EXCLUDED.tier, status=EXCLUDED.status", conn))
+                    string sql = DbConnectionHelper.IsSqlServer ?
+                        @"IF EXISTS (SELECT 1 FROM customers WHERE id = @id)
+                            UPDATE customers SET full_name=@name, email=@email, phone=@phone, tier=@tier, status=@status WHERE id=@id
+                          ELSE
+                            INSERT INTO customers (id, full_name, email, phone, total_orders, total_spent, tier, status) VALUES (@id, @name, @email, @phone, @orders, @spent, @tier, @status);"
+                        :
+                        @"INSERT INTO customers (id, full_name, email, phone, total_orders, total_spent, tier, status) 
+                          VALUES (@id, @name, @email, @phone, @orders, @spent, @tier, @status) 
+                          ON CONFLICT (id) DO UPDATE SET full_name=EXCLUDED.full_name, email=EXCLUDED.email, phone=EXCLUDED.phone, tier=EXCLUDED.tier, status=EXCLUDED.status;";
+
+                    using (var cmd = conn.CreateCommand())
                     {
-                        cmd.Parameters.AddWithValue("@id", customer.Id);
-                        cmd.Parameters.AddWithValue("@name", customer.FullName ?? "");
-                        cmd.Parameters.AddWithValue("@email", customer.Email ?? "");
-                        cmd.Parameters.AddWithValue("@phone", customer.Phone ?? "");
-                        cmd.Parameters.AddWithValue("@orders", customer.TotalOrders);
-                        cmd.Parameters.AddWithValue("@spent", customer.TotalSpent);
-                        cmd.Parameters.AddWithValue("@tier", customer.Tier ?? "Regular");
-                        cmd.Parameters.AddWithValue("@status", customer.Status ?? "Active");
+                        cmd.CommandText = sql;
+                        cmd.AddParam("@id", customer.Id);
+                        cmd.AddParam("@name", customer.FullName ?? "");
+                        cmd.AddParam("@email", customer.Email ?? "");
+                        cmd.AddParam("@phone", customer.Phone ?? "");
+                        cmd.AddParam("@orders", customer.TotalOrders);
+                        cmd.AddParam("@spent", customer.TotalSpent);
+                        cmd.AddParam("@tier", customer.Tier ?? "Regular");
+                        cmd.AddParam("@status", customer.Status ?? "Active");
                         cmd.ExecuteNonQuery();
                     }
                 }
@@ -568,15 +616,15 @@ namespace assignment_code.Services
                 using (var conn = DbConnectionHelper.CreateConnection())
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand(
-                        "UPDATE customers SET full_name=@name, email=@email, phone=@phone, tier=@tier, status=@status WHERE id=@id", conn))
+                    using (var cmd = conn.CreateCommand())
                     {
-                        cmd.Parameters.AddWithValue("@id", customer.Id);
-                        cmd.Parameters.AddWithValue("@name", customer.FullName ?? "");
-                        cmd.Parameters.AddWithValue("@email", customer.Email ?? "");
-                        cmd.Parameters.AddWithValue("@phone", customer.Phone ?? "");
-                        cmd.Parameters.AddWithValue("@tier", customer.Tier ?? "Regular");
-                        cmd.Parameters.AddWithValue("@status", customer.Status ?? "Active");
+                        cmd.CommandText = "UPDATE customers SET full_name=@name, email=@email, phone=@phone, tier=@tier, status=@status WHERE id=@id";
+                        cmd.AddParam("@id", customer.Id);
+                        cmd.AddParam("@name", customer.FullName ?? "");
+                        cmd.AddParam("@email", customer.Email ?? "");
+                        cmd.AddParam("@phone", customer.Phone ?? "");
+                        cmd.AddParam("@tier", customer.Tier ?? "Regular");
+                        cmd.AddParam("@status", customer.Status ?? "Active");
                         cmd.ExecuteNonQuery();
                     }
                 }
@@ -596,9 +644,10 @@ namespace assignment_code.Services
                 using (var conn = DbConnectionHelper.CreateConnection())
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand("DELETE FROM customers WHERE id = @id", conn))
+                    using (var cmd = conn.CreateCommand())
                     {
-                        cmd.Parameters.AddWithValue("@id", id);
+                        cmd.CommandText = "DELETE FROM customers WHERE id = @id";
+                        cmd.AddParam("@id", id);
                         cmd.ExecuteNonQuery();
                     }
                 }
@@ -628,17 +677,25 @@ namespace assignment_code.Services
                 using (var conn = DbConnectionHelper.CreateConnection())
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand(
-                        "INSERT INTO users (id, full_name, email, role, status, last_login) " +
-                        "VALUES (@id, @name, @email, @role, @status, @lastLogin) " +
-                        "ON CONFLICT (id) DO UPDATE SET full_name=EXCLUDED.full_name, role=EXCLUDED.role, status=EXCLUDED.status", conn))
+                    string sql = DbConnectionHelper.IsSqlServer ?
+                        @"IF EXISTS (SELECT 1 FROM users WHERE id = @id)
+                            UPDATE users SET full_name=@name, email=@email, role=@role, status=@status WHERE id=@id
+                          ELSE
+                            INSERT INTO users (id, full_name, email, role, status, last_login) VALUES (@id, @name, @email, @role, @status, @lastLogin);"
+                        :
+                        @"INSERT INTO users (id, full_name, email, role, status, last_login) 
+                          VALUES (@id, @name, @email, @role, @status, @lastLogin) 
+                          ON CONFLICT (id) DO UPDATE SET full_name=EXCLUDED.full_name, role=EXCLUDED.role, status=EXCLUDED.status;";
+
+                    using (var cmd = conn.CreateCommand())
                     {
-                        cmd.Parameters.AddWithValue("@id", user.Id);
-                        cmd.Parameters.AddWithValue("@name", user.FullName ?? "");
-                        cmd.Parameters.AddWithValue("@email", user.Email ?? "");
-                        cmd.Parameters.AddWithValue("@role", user.Role ?? "Store Staff");
-                        cmd.Parameters.AddWithValue("@status", user.Status ?? "Active");
-                        cmd.Parameters.AddWithValue("@lastLogin", user.LastLogin);
+                        cmd.CommandText = sql;
+                        cmd.AddParam("@id", user.Id);
+                        cmd.AddParam("@name", user.FullName ?? "");
+                        cmd.AddParam("@email", user.Email ?? "");
+                        cmd.AddParam("@role", user.Role ?? "Store Staff");
+                        cmd.AddParam("@status", user.Status ?? "Active");
+                        cmd.AddParam("@lastLogin", user.LastLogin);
                         cmd.ExecuteNonQuery();
                     }
                 }
@@ -667,14 +724,14 @@ namespace assignment_code.Services
                 using (var conn = DbConnectionHelper.CreateConnection())
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand(
-                        "UPDATE users SET full_name=@name, email=@email, role=@role, status=@status WHERE id=@id", conn))
+                    using (var cmd = conn.CreateCommand())
                     {
-                        cmd.Parameters.AddWithValue("@id", user.Id);
-                        cmd.Parameters.AddWithValue("@name", user.FullName ?? "");
-                        cmd.Parameters.AddWithValue("@email", user.Email ?? "");
-                        cmd.Parameters.AddWithValue("@role", user.Role ?? "Store Staff");
-                        cmd.Parameters.AddWithValue("@status", user.Status ?? "Active");
+                        cmd.CommandText = "UPDATE users SET full_name=@name, email=@email, role=@role, status=@status WHERE id=@id";
+                        cmd.AddParam("@id", user.Id);
+                        cmd.AddParam("@name", user.FullName ?? "");
+                        cmd.AddParam("@email", user.Email ?? "");
+                        cmd.AddParam("@role", user.Role ?? "Store Staff");
+                        cmd.AddParam("@status", user.Status ?? "Active");
                         cmd.ExecuteNonQuery();
                     }
                 }
@@ -694,9 +751,10 @@ namespace assignment_code.Services
                 using (var conn = DbConnectionHelper.CreateConnection())
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand("DELETE FROM users WHERE id = @id", conn))
+                    using (var cmd = conn.CreateCommand())
                     {
-                        cmd.Parameters.AddWithValue("@id", id);
+                        cmd.CommandText = "DELETE FROM users WHERE id = @id";
+                        cmd.AddParam("@id", id);
                         cmd.ExecuteNonQuery();
                     }
                 }
@@ -724,10 +782,11 @@ namespace assignment_code.Services
                 using (var conn = DbConnectionHelper.CreateConnection())
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand("UPDATE orders SET status = @status WHERE order_id = @id", conn))
+                    using (var cmd = conn.CreateCommand())
                     {
-                        cmd.Parameters.AddWithValue("@status", newStatus);
-                        cmd.Parameters.AddWithValue("@id", orderId);
+                        cmd.CommandText = "UPDATE orders SET status = @status WHERE order_id = @id";
+                        cmd.AddParam("@status", newStatus);
+                        cmd.AddParam("@id", orderId);
                         cmd.ExecuteNonQuery();
                     }
                 }
@@ -807,7 +866,7 @@ namespace assignment_code.Services
                 if (ci.Product.Stock == 0) ci.Product.Status = "Out of Stock";
                 else if (ci.Product.Stock < 10) ci.Product.Status = "Low Stock";
 
-                // Update product stock in PostgreSQL
+                // Update product stock in database
                 UpdateProductStockInDb(ci.Product.Id, ci.Product.Stock, ci.Product.Status);
             }
 
@@ -827,7 +886,7 @@ namespace assignment_code.Services
 
             Sales.Insert(0, sale);
 
-            // Persist Sale and Line Items to PostgreSQL
+            // Persist Sale and Line Items to Database
             SaveSaleToDatabase(sale);
 
             ClearCart();
@@ -844,34 +903,36 @@ namespace assignment_code.Services
                     conn.Open();
                     using (var trans = conn.BeginTransaction())
                     {
-                        using (var cmd = new NpgsqlCommand(
-                            "INSERT INTO sales (invoice_no, customer_name, subtotal, tax_amount, discount_amount, total_amount, payment_method, status, timestamp) " +
-                            "VALUES (@inv, @cust, @sub, @tax, @disc, @total, @pay, @sts, @time)", conn, trans))
+                        using (var cmd = conn.CreateCommand())
                         {
-                            cmd.Parameters.AddWithValue("@inv", sale.InvoiceNo);
-                            cmd.Parameters.AddWithValue("@cust", sale.CustomerName);
-                            cmd.Parameters.AddWithValue("@sub", sale.Subtotal);
-                            cmd.Parameters.AddWithValue("@tax", sale.TaxAmount);
-                            cmd.Parameters.AddWithValue("@disc", sale.DiscountAmount);
-                            cmd.Parameters.AddWithValue("@total", sale.TotalAmount);
-                            cmd.Parameters.AddWithValue("@pay", sale.PaymentMethod);
-                            cmd.Parameters.AddWithValue("@sts", sale.Status);
-                            cmd.Parameters.AddWithValue("@time", sale.Timestamp);
+                            cmd.Transaction = trans;
+                            cmd.CommandText = "INSERT INTO sales (invoice_no, customer_name, subtotal, tax_amount, discount_amount, total_amount, payment_method, status, timestamp) " +
+                                             "VALUES (@inv, @cust, @sub, @tax, @disc, @total, @pay, @sts, @time)";
+                            cmd.AddParam("@inv", sale.InvoiceNo);
+                            cmd.AddParam("@cust", sale.CustomerName);
+                            cmd.AddParam("@sub", sale.Subtotal);
+                            cmd.AddParam("@tax", sale.TaxAmount);
+                            cmd.AddParam("@disc", sale.DiscountAmount);
+                            cmd.AddParam("@total", sale.TotalAmount);
+                            cmd.AddParam("@pay", sale.PaymentMethod);
+                            cmd.AddParam("@sts", sale.Status);
+                            cmd.AddParam("@time", sale.Timestamp);
                             cmd.ExecuteNonQuery();
                         }
 
                         foreach (var item in sale.Items)
                         {
-                            using (var cmdItem = new NpgsqlCommand(
-                                "INSERT INTO sale_items (invoice_no, product_id, product_name, quantity, unit_price, subtotal) " +
-                                "VALUES (@inv, @pid, @pname, @qty, @uprice, @stotal)", conn, trans))
+                            using (var cmdItem = conn.CreateCommand())
                             {
-                                cmdItem.Parameters.AddWithValue("@inv", sale.InvoiceNo);
-                                cmdItem.Parameters.AddWithValue("@pid", item.Product.Id);
-                                cmdItem.Parameters.AddWithValue("@pname", item.Product.Name);
-                                cmdItem.Parameters.AddWithValue("@qty", item.Quantity);
-                                cmdItem.Parameters.AddWithValue("@uprice", item.Product.Price);
-                                cmdItem.Parameters.AddWithValue("@stotal", item.Subtotal);
+                                cmdItem.Transaction = trans;
+                                cmdItem.CommandText = "INSERT INTO sale_items (invoice_no, product_id, product_name, quantity, unit_price, subtotal) " +
+                                                     "VALUES (@inv, @pid, @pname, @qty, @uprice, @stotal)";
+                                cmdItem.AddParam("@inv", sale.InvoiceNo);
+                                cmdItem.AddParam("@pid", item.Product.Id);
+                                cmdItem.AddParam("@pname", item.Product.Name);
+                                cmdItem.AddParam("@qty", item.Quantity);
+                                cmdItem.AddParam("@uprice", item.Product.Price);
+                                cmdItem.AddParam("@stotal", item.Subtotal);
                                 cmdItem.ExecuteNonQuery();
                             }
                         }
@@ -893,11 +954,12 @@ namespace assignment_code.Services
                 using (var conn = DbConnectionHelper.CreateConnection())
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand("UPDATE products SET stock = @stock, status = @status WHERE id = @id", conn))
+                    using (var cmd = conn.CreateCommand())
                     {
-                        cmd.Parameters.AddWithValue("@stock", newStock);
-                        cmd.Parameters.AddWithValue("@status", newStatus);
-                        cmd.Parameters.AddWithValue("@id", productId);
+                        cmd.CommandText = "UPDATE products SET stock = @stock, status = @status WHERE id = @id";
+                        cmd.AddParam("@stock", newStock);
+                        cmd.AddParam("@status", newStatus);
+                        cmd.AddParam("@id", productId);
                         cmd.ExecuteNonQuery();
                     }
                 }
@@ -924,15 +986,20 @@ namespace assignment_code.Services
             AppUser user = null;
             string dbPasswordHash = null;
 
-            // 1. Direct PostgreSQL Database Authentication (Strict Verification)
+            // 1. Direct Database Authentication (Strict Verification)
             try
             {
                 using (var conn = DbConnectionHelper.CreateConnection())
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand("SELECT id, full_name, email, password_hash, role, status, last_login FROM users WHERE LOWER(email) = @e OR LOWER(full_name) = @e OR LOWER(id) = @e LIMIT 1", conn))
+                    string selectSql = DbConnectionHelper.IsSqlServer ?
+                        "SELECT TOP 1 id, full_name, email, password_hash, role, status, last_login FROM users WHERE LOWER(email) = @e OR LOWER(full_name) = @e OR LOWER(id) = @e" :
+                        "SELECT id, full_name, email, password_hash, role, status, last_login FROM users WHERE LOWER(email) = @e OR LOWER(full_name) = @e OR LOWER(id) = @e LIMIT 1";
+
+                    using (var cmd = conn.CreateCommand())
                     {
-                        cmd.Parameters.AddWithValue("@e", clean.ToLowerInvariant());
+                        cmd.CommandText = selectSql;
+                        cmd.AddParam("@e", clean.ToLowerInvariant());
                         using (var reader = cmd.ExecuteReader())
                         {
                             if (reader.Read())
@@ -954,9 +1021,11 @@ namespace assignment_code.Services
                     if (user != null)
                     {
                         // Update last_login in database
-                        using (var upCmd = new NpgsqlCommand("UPDATE users SET last_login = NOW() WHERE id = @id", conn))
+                        using (var upCmd = conn.CreateCommand())
                         {
-                            upCmd.Parameters.AddWithValue("@id", user.Id);
+                            upCmd.CommandText = "UPDATE users SET last_login = @now WHERE id = @id";
+                            upCmd.AddParam("@now", DateTime.Now);
+                            upCmd.AddParam("@id", user.Id);
                             upCmd.ExecuteNonQuery();
                         }
                     }

@@ -13,7 +13,7 @@ namespace assignment_code.UI.Views
         private StoreDataService _dataService = StoreDataService.Instance;
         private Panel _contentWrapper;
         private FlowLayoutPanel _filterTabsPanel;
-        private Button _btnRefresh;
+        private ModernButton _modernBtnRefresh;
         private DataGridView _grid;
         private string _statusFilter = "All";
 
@@ -60,23 +60,20 @@ namespace assignment_code.UI.Views
 
             _filterTabsPanel = new FlowLayoutPanel
             {
-                Height = 36,
+                Height = 34,
                 BackColor = Color.Transparent,
                 WrapContents = false
             };
 
-            _btnRefresh = new Button
+            _modernBtnRefresh = new ModernButton
             {
                 Text = "Refresh",
-                Font = FontHelper.CreateFont(9F, FontStyle.Bold),
+                IconName = "refresh",
+                ButtonType = ModernButtonType.Secondary,
                 Size = new Size(110, 34),
-                FlatStyle = FlatStyle.Flat,
-                BackColor = ThemeManager.CardBackground,
-                ForeColor = ThemeManager.TextPrimary,
-                Cursor = Cursors.Hand
+                TranslationKey = "Refresh"
             };
-            _btnRefresh.FlatAppearance.BorderColor = ThemeManager.BorderColor;
-            _btnRefresh.Click += (s, e) =>
+            _modernBtnRefresh.Click += (s, e) =>
             {
                 _dataService.LoadData();
                 RefreshGrid();
@@ -136,7 +133,7 @@ namespace assignment_code.UI.Views
             };
 
             _contentWrapper.Controls.Add(_filterTabsPanel);
-            _contentWrapper.Controls.Add(_btnRefresh);
+            _contentWrapper.Controls.Add(_modernBtnRefresh);
             _contentWrapper.Controls.Add(_grid);
 
             TranslationManager.LanguageChanged += (s, e) =>
@@ -219,9 +216,9 @@ namespace assignment_code.UI.Views
 
             DataGridViewStyleHelper.UpdateColors(_grid);
 
-            _btnRefresh.BackColor = ThemeManager.CardBackground;
-            _btnRefresh.ForeColor = ThemeManager.TextPrimary;
-            _btnRefresh.FlatAppearance.BorderColor = ThemeManager.BorderColor;
+            _modernBtnRefresh.BackColor = ThemeManager.CardBackground;
+            _modernBtnRefresh.ForeColor = ThemeManager.TextPrimary;
+            _modernBtnRefresh.Invalidate();
 
             Invalidate(true);
         }
@@ -245,7 +242,7 @@ namespace assignment_code.UI.Views
             int startY = 14;
             _filterTabsPanel.Location = new Point(0, startY);
             _filterTabsPanel.Width = w - 130;
-            _btnRefresh.Location = new Point(w - _btnRefresh.Width, startY);
+            _modernBtnRefresh.Location = new Point(w - _modernBtnRefresh.Width, startY);
 
             int gridY = startY + 44;
             _grid.Location = new Point(0, gridY);

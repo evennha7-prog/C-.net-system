@@ -13,8 +13,8 @@ namespace assignment_code.UI.Views
         private StoreDataService _dataService = StoreDataService.Instance;
         private Panel _contentWrapper;
         private DataGridView _grid;
-        private TextBox _txtSearch;
-        private Button _btnRefresh;
+        private ModernSearchBox _searchBox;
+        private ModernButton _btnRefresh;
         private string _searchFilter = "";
 
         public SalesListView()
@@ -56,28 +56,25 @@ namespace assignment_code.UI.Views
             Controls.Add(_contentWrapper);
             Resize += (s, e) => RepositionContent();
 
-            _txtSearch = new TextBox
+            _searchBox = new ModernSearchBox
             {
-                Font = FontHelper.CreateFont(9.5F),
-                Size = new Size(240, 26)
+                PlaceholderText = "Search invoice or customer...",
+                Size = new Size(240, 34)
             };
-            _txtSearch.TextChanged += (s, e) =>
+            _searchBox.SearchTextChanged += (s, e) =>
             {
-                _searchFilter = _txtSearch.Text.Trim();
+                _searchFilter = _searchBox.Text.Trim();
                 RefreshGrid();
             };
 
-            _btnRefresh = new Button
+            _btnRefresh = new ModernButton
             {
                 Text = "Refresh",
-                Font = FontHelper.CreateFont(9F, FontStyle.Bold),
+                IconName = "refresh",
+                ButtonType = ModernButtonType.Secondary,
                 Size = new Size(110, 34),
-                FlatStyle = FlatStyle.Flat,
-                BackColor = ThemeManager.CardBackground,
-                ForeColor = ThemeManager.TextPrimary,
-                Cursor = Cursors.Hand
+                TranslationKey = "Refresh"
             };
-            _btnRefresh.FlatAppearance.BorderColor = ThemeManager.BorderColor;
             _btnRefresh.Click += (s, e) =>
             {
                 _dataService.LoadData();
@@ -134,7 +131,7 @@ namespace assignment_code.UI.Views
                 }
             };
 
-            _contentWrapper.Controls.Add(_txtSearch);
+            _contentWrapper.Controls.Add(_searchBox);
             _contentWrapper.Controls.Add(_btnRefresh);
             _contentWrapper.Controls.Add(_grid);
 
@@ -162,7 +159,7 @@ namespace assignment_code.UI.Views
         public void ApplySearch(string query)
         {
             _searchFilter = query;
-            _txtSearch.Text = query;
+            _searchBox.Text = query;
             RefreshGrid();
         }
 
@@ -192,9 +189,7 @@ namespace assignment_code.UI.Views
 
             _btnRefresh.BackColor = ThemeManager.CardBackground;
             _btnRefresh.ForeColor = ThemeManager.TextPrimary;
-            _btnRefresh.FlatAppearance.BorderColor = ThemeManager.BorderColor;
-
-            Invalidate(true);
+            _btnRefresh.Invalidate();
         }
 
         protected override void OnVisibleChanged(EventArgs e)
@@ -214,7 +209,7 @@ namespace assignment_code.UI.Views
             _contentWrapper.Width = w;
 
             int startY = 14;
-            _txtSearch.Location = new Point(0, startY + 4);
+            _searchBox.Location = new Point(0, startY);
             _btnRefresh.Location = new Point(w - _btnRefresh.Width, startY);
 
             int gridY = startY + 44;

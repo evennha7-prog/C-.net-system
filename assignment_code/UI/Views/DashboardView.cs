@@ -9,28 +9,30 @@ namespace assignment_code.UI.Views
     public partial class DashboardView : UserControl, IRefreshableView
     {
         private DashboardService _dashboardService = new DashboardService();
+        private RoundedPanel _sectionHeader;
+        private Label _sectionTitle;
+        private Label _sectionSubtitle;
+        private ModernButton _btnViewAll;
 
         public DashboardView()
         {
             SetStyle(ControlStyles.UserPaint |
-                     ControlStyles.AllPaintingInWmPaint |
-                     ControlStyles.OptimizedDoubleBuffer |
-                     ControlStyles.ResizeRedraw, true);
+                      ControlStyles.AllPaintingInWmPaint |
+                      ControlStyles.OptimizedDoubleBuffer |
+                      ControlStyles.ResizeRedraw, true);
 
             InitializeComponent();
             SetupEventHandlers();
             BindInitialData();
             ApplyTheme();
-            ThemeManager.ThemeChanged += (s, e) =>
-            {
-                ApplyTheme();
-                Invalidate(true);
-            };
+            ThemeManager.ThemeChanged += (s, e) => { ApplyTheme(); Invalidate(true); };
             StoreDataService.Instance.DataRefreshed += (s, e) => RefreshView();
             TranslationManager.LanguageChanged += (s, e) =>
             {
+                _sectionTitle.Text = TranslationManager.T("Dashboard", "Dashboard");
                 _barChartPostGrowth.Title = TranslationManager.T("ProductGrowth", "Product Growth");
                 _splineChartCommentsTrend.Title = TranslationManager.T("SalesOrderTrends", "Sales & Order Trends");
+                _btnViewAll.Text = TranslationManager.T("ViewAll", "View All");
                 RefreshView();
             };
         }
@@ -38,10 +40,11 @@ namespace assignment_code.UI.Views
         private void ApplyTheme()
         {
             BackColor = ThemeManager.Background;
-            if (_contentWrapper != null)
-            {
-                _contentWrapper.BackColor = ThemeManager.Background;
-            }
+            if (_contentWrapper != null) _contentWrapper.BackColor = ThemeManager.Background;
+            if (_sectionHeader != null) _sectionHeader.BackColor = ThemeManager.CardBackground;
+            if (_sectionTitle != null) _sectionTitle.ForeColor = ThemeManager.TextPrimary;
+            if (_sectionSubtitle != null) _sectionSubtitle.ForeColor = ThemeManager.TextSecondary;
+            Invalidate(true);
         }
 
         private void SetupEventHandlers()
@@ -50,17 +53,14 @@ namespace assignment_code.UI.Views
             {
                 _barChartPostGrowth.Bind(_dashboardService.GetPostGrowthData(period), period);
             };
-
             _splineChartCommentsTrend.PeriodChanged += (s, period) =>
             {
                 _splineChartCommentsTrend.Bind(_dashboardService.GetCommentsTrendData(period), period);
             };
-
             _latestPostsCard.PostActionClicked += (s, post) =>
             {
                 MessageBox.Show($"Product: {post.Title}\nStatus: {post.Status}\nPublished: {post.Date}", "Product Details", MessageBoxButtons.OK, MessageBoxIcon.Information);
             };
-
             _recentCommentsCard.ViewCommentClicked += (s, comment) =>
             {
                 MessageBox.Show($"Author: {comment.Author}\nReport: {comment.Preview}\nDate: {comment.Date}", "Report Inspection", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -89,24 +89,28 @@ namespace assignment_code.UI.Views
         {
             if (_contentWrapper == null || _kpiPosts == null) return;
 
-            int containerW = Math.Max(700, ClientSize.Width);
+            int containerW = Math.Max(720, ClientSize.Width);
             _contentWrapper.Width = containerW;
 
             int gap = 16;
-            int startY = 14;
+            int startY = 16;
 
-            // Row 1: KPI Cards
+            // Row 1: KPI Cards (with section header)
+            int headerH = 32;
+            int headerY = startY;
+
             int kpiW = (containerW - (gap * 3)) / 4;
-            int kpiH = 126;
+            int kpiH = 120;
+            int kpiY = headerY + headerH + gap;
 
-            _kpiPosts.SetBounds(0, startY, kpiW, kpiH);
-            _kpiCategories.SetBounds(kpiW + gap, startY, kpiW, kpiH);
-            _kpiMedia.SetBounds((kpiW + gap) * 2, startY, kpiW, kpiH);
-            _kpiComments.SetBounds((kpiW + gap) * 3, startY, containerW - ((kpiW + gap) * 3), kpiH);
+            _kpiPosts.SetBounds(0, kpiY, kpiW, kpiH);
+            _kpiCategories.SetBounds(kpiW + gap, kpiY, kpiW, kpiH);
+            _kpiMedia.SetBounds((kpiW + gap) * 2, kpiY, kpiW, kpiH);
+            _kpiComments.SetBounds((kpiW + gap) * 3, kpiY, containerW - ((kpiW + gap) * 3), kpiH);
 
             // Row 2: Charts
-            int row2Y = startY + kpiH + gap;
-            int chartH = 250;
+            int row2Y = kpiY + kpiH + gap;
+            int chartH = 260;
             int leftColW = (int)((containerW - gap) * 0.44f);
             int rightColW = containerW - leftColW - gap;
 
@@ -115,12 +119,12 @@ namespace assignment_code.UI.Views
 
             // Row 3: Tables
             int row3Y = row2Y + chartH + gap;
-            int tableH = 230;
+            int tableH = 240;
 
             _latestPostsCard.SetBounds(0, row3Y, leftColW, tableH);
             _recentCommentsCard.SetBounds(leftColW + gap, row3Y, rightColW, tableH);
 
-            _contentWrapper.Height = row3Y + tableH + 16;
+            _contentWrapper.Height = row3Y + tableH + 20;
         }
 
         private void BindInitialData()
