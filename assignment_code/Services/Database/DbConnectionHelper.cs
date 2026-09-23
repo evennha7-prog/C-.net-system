@@ -56,11 +56,34 @@ namespace assignment_code.Services.Database
                     }
                 }
             }
+            catch (PostgresException pgex)
+            {
+                sw.Stop();
+                elapsedMs = sw.ElapsedMilliseconds;
+                if (pgex.SqlState == "28P01" || pgex.MessageText.ToLowerInvariant().Contains("password authentication failed"))
+                {
+                    message = "Password authentication failed (28P01). The database password in your .env does not match your Supabase database password.\n" +
+                              "Please reset your password in Supabase Dashboard (Project Settings > Database > Database password) and update DB_PASSWORD in .env.";
+                }
+                else
+                {
+                    message = $"PostgreSQL Error [{pgex.SqlState}]: {pgex.MessageText}";
+                }
+                return false;
+            }
             catch (Exception ex)
             {
                 sw.Stop();
                 elapsedMs = sw.ElapsedMilliseconds;
-                message = $"Connection failed: {ex.Message}";
+                if (ex.Message.Contains("28P01") || ex.Message.ToLowerInvariant().Contains("password authentication failed"))
+                {
+                    message = "Password authentication failed (28P01). The database password in your .env does not match your Supabase database password.\n" +
+                              "Please reset your password in Supabase Dashboard (Project Settings > Database > Database password) and update DB_PASSWORD in .env.";
+                }
+                else
+                {
+                    message = $"Connection failed: {ex.Message}";
+                }
                 return false;
             }
         }

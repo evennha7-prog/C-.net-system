@@ -272,7 +272,10 @@ namespace assignment_code.UI.Views
             {
                 _lblDbStatus.Text = "● Status: Connection Failed";
                 _lblDbStatus.ForeColor = ThemeManager.DangerRed;
-                _txtDbLog.Text = $"[{DateTime.Now:HH:mm:ss}] Connection failed:\n{EnvLoader.Get("DB_HOST")}";
+                _txtDbLog.Text = $"[{DateTime.Now:HH:mm:ss}] Connection failed ({elapsed}ms):\n{msg}\n\n" +
+                                 $"Host: {EnvLoader.Get("DB_HOST")}\n" +
+                                 $"Port: {EnvLoader.Get("DB_PORT")}\n" +
+                                 $"User: {EnvLoader.Get("DB_USERNAME")}";
             }
         }
 
