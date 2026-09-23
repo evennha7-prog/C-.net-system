@@ -6,6 +6,7 @@ using System.Linq;
 using System.Windows.Forms;
 using assignment_code.Models;
 using assignment_code.Services;
+using assignment_code.Services.Security;
 
 namespace assignment_code.UI
 {
@@ -565,6 +566,13 @@ namespace assignment_code.UI
                     u.Email = email;
                     u.Role = cboRole.SelectedItem?.ToString() ?? "Cashier";
                     u.Status = cboStatus.SelectedItem?.ToString() ?? "Active";
+
+                    string pass = txtPass.Text.Trim();
+                    if (!string.IsNullOrEmpty(pass))
+                    {
+                        u.RawPassword = pass;
+                        u.PasswordHash = PasswordSecurityHelper.HashPassword(pass);
+                    }
                     return u;
                 }
             }

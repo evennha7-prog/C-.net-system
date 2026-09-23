@@ -408,7 +408,7 @@ namespace assignment_code.UI.Views
 
             Button btnAdd = new Button
             {
-                Text = TranslationManager.T("Add", "+ Add"),
+                Text = TranslationManager.T("Add", "Add"),
                 Font = FontHelper.CreateFont(8.5F, FontStyle.Bold),
                 Size = new Size(66, 32),
                 Location = new Point(card.Width - 76, 192),

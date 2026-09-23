@@ -104,7 +104,7 @@ namespace assignment_code.UI.Views
             };
             _btnAddCustomer = new ModernButton
             {
-                Text = "+ Add New Customer",
+                Text = "Add New Customer",
                 IconName = "plus",
                 ButtonType = ModernButtonType.Primary,
                 Size = new Size(185, 38)
@@ -266,7 +266,7 @@ namespace assignment_code.UI.Views
             }
             else if (e.ColumnIndex == 9) // Delete
             {
-                string confirmMsg = TranslationManager.T("ConfirmDeleteCustomer", $"Are you sure you want to delete customer '{cust.FullName}' from PostgreSQL database?");
+                string confirmMsg = TranslationManager.T("ConfirmDeleteCustomer", $"Are you sure you want to delete customer '{cust.FullName}' from the database?");
                 if (MessageBox.Show(confirmMsg, "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
                 {
                     _dataService.DeleteCustomer(cust.Id);
@@ -364,7 +364,7 @@ namespace assignment_code.UI.Views
         {
             _lblTitle.Text = TranslationManager.T("Customers", "Customer Directory");
             _lblSubtitle.Text = TranslationManager.T("CustomersSubtitle", "View client profiles, transaction history, contact info, and loyalty tiers.");
-            _btnAddCustomer.Text = TranslationManager.T("AddNewCustomer", "+ Add New Customer");
+            _btnAddCustomer.Text = TranslationManager.T("AddNewCustomer", "Add New Customer");
             _btnRefresh.Text = TranslationManager.T("Refresh", "Refresh");
 
             if (_grid.Columns.Count >= 10)

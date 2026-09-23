@@ -73,7 +73,7 @@ namespace assignment_code.UI.Views
             this._btnAddCategory.Name = "_btnAddCategory";
             this._btnAddCategory.Size = new System.Drawing.Size(180, 34);
             this._btnAddCategory.TabIndex = 1;
-            this._btnAddCategory.Text = "+ Add New Category";
+            this._btnAddCategory.Text = "Add New Category";
             this._btnAddCategory.UseVisualStyleBackColor = false;
             this._btnAddCategory.Click += new System.EventHandler(this.BtnAddCategory_Click);
             // 

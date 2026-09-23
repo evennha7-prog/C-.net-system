@@ -191,10 +191,18 @@ namespace assignment_code.UI.Controls
                 ? Services.TranslationManager.T(_translationKey, Text)
                 : Text;
 
+            bool hasIcon = !string.IsNullOrEmpty(_iconName);
+            if (hasIcon && !string.IsNullOrEmpty(displayText))
+            {
+                if (displayText.StartsWith("+ "))
+                    displayText = displayText.Substring(2).TrimStart();
+                else if (displayText.StartsWith("+"))
+                    displayText = displayText.Substring(1).TrimStart();
+            }
+
             using (Font f = FontHelper.CreateFont(Font.Size, FontStyle.Bold))
             using (SolidBrush fgBrush = new SolidBrush(fgColor))
             {
-                bool hasIcon = !string.IsNullOrEmpty(_iconName);
                 int iconSize = 16;
                 int gap = 8;
                 SizeF textSize = g.MeasureString(displayText, f);

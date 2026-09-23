@@ -104,10 +104,10 @@ namespace assignment_code.UI.Views
             };
             _btnAddProduct = new ModernButton
             {
-                Text = "+ Add New Product",
+                Text = "Add New Product",
                 IconName = "plus",
                 ButtonType = ModernButtonType.Primary,
-                Size = new Size(175, 38)
+                Size = new Size(185, 38)
             };
             _btnAddProduct.Click += BtnAddProduct_Click;
 
@@ -265,7 +265,7 @@ namespace assignment_code.UI.Views
             }
             else if (e.ColumnIndex == 7) // Delete
             {
-                string confirmMsg = TranslationManager.T("ConfirmDeleteProduct", $"Are you sure you want to delete '{prd.Name}' from PostgreSQL database?");
+                string confirmMsg = TranslationManager.T("ConfirmDeleteProduct", $"Are you sure you want to delete '{prd.Name}' from the database?");
                 if (MessageBox.Show(confirmMsg, "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
                 {
                     _dataService.DeleteProduct(prd.Id);
@@ -375,7 +375,7 @@ namespace assignment_code.UI.Views
         {
             _lblTitle.Text = TranslationManager.T("Products", "Products & Inventory");
             _lblSubtitle.Text = TranslationManager.T("ProductsSubtitle", "Manage store catalog, stock quantities, categories, and retail pricing.");
-            _btnAddProduct.Text = TranslationManager.T("AddNewProduct", "+ Add New Product");
+            _btnAddProduct.Text = TranslationManager.T("AddNewProduct", "Add New Product");
             _btnRefresh.Text = TranslationManager.T("Refresh", "Refresh");
 
             if (_grid.Columns.Count >= 8)

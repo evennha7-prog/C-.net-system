@@ -9,10 +9,6 @@ namespace assignment_code.UI.Views
     public partial class DashboardView : UserControl, IRefreshableView
     {
         private DashboardService _dashboardService = new DashboardService();
-        private RoundedPanel _sectionHeader;
-        private Label _sectionTitle;
-        private Label _sectionSubtitle;
-        private ModernButton _btnViewAll;
 
         public DashboardView()
         {
@@ -29,10 +25,8 @@ namespace assignment_code.UI.Views
             StoreDataService.Instance.DataRefreshed += (s, e) => RefreshView();
             TranslationManager.LanguageChanged += (s, e) =>
             {
-                _sectionTitle.Text = TranslationManager.T("Dashboard", "Dashboard");
-                _barChartPostGrowth.Title = TranslationManager.T("ProductGrowth", "Product Growth");
-                _splineChartCommentsTrend.Title = TranslationManager.T("SalesOrderTrends", "Sales & Order Trends");
-                _btnViewAll.Text = TranslationManager.T("ViewAll", "View All");
+                if (_barChartPostGrowth != null) _barChartPostGrowth.Title = TranslationManager.T("ProductGrowth", "Product Growth");
+                if (_splineChartCommentsTrend != null) _splineChartCommentsTrend.Title = TranslationManager.T("SalesOrderTrends", "Sales & Order Trends");
                 RefreshView();
             };
         }
@@ -41,9 +35,6 @@ namespace assignment_code.UI.Views
         {
             BackColor = ThemeManager.Background;
             if (_contentWrapper != null) _contentWrapper.BackColor = ThemeManager.Background;
-            if (_sectionHeader != null) _sectionHeader.BackColor = ThemeManager.CardBackground;
-            if (_sectionTitle != null) _sectionTitle.ForeColor = ThemeManager.TextPrimary;
-            if (_sectionSubtitle != null) _sectionSubtitle.ForeColor = ThemeManager.TextSecondary;
             Invalidate(true);
         }
 

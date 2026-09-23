@@ -5,6 +5,7 @@ using System.Data.Common;
 using System.Linq;
 using assignment_code.Models;
 using assignment_code.Services.Database;
+using assignment_code.Services.Security;
 
 namespace assignment_code.Services
 {
@@ -192,7 +193,7 @@ namespace assignment_code.Services
                     var users = new List<AppUser>();
                     using (var cmd = conn.CreateCommand())
                     {
-                        cmd.CommandText = "SELECT id, full_name, email, role, status, last_login FROM users ORDER BY id";
+                        cmd.CommandText = "SELECT id, full_name, email, role, status, last_login, password_hash FROM users ORDER BY id";
                         using (var reader = cmd.ExecuteReader())
                         {
                             while (reader.Read())
@@ -204,7 +205,8 @@ namespace assignment_code.Services
                                     Email = reader.GetString(2),
                                     Role = reader.IsDBNull(3) ? "Store Staff" : reader.GetString(3),
                                     Status = reader.IsDBNull(4) ? "Active" : reader.GetString(4),
-                                    LastLogin = reader.IsDBNull(5) ? DateTime.Now : reader.GetDateTime(5)
+                                    LastLogin = reader.IsDBNull(5) ? DateTime.Now : reader.GetDateTime(5),
+                                    PasswordHash = reader.IsDBNull(6) ? null : reader.GetString(6)
                                 });
                             }
                         }
@@ -316,10 +318,10 @@ namespace assignment_code.Services
             {
                 var defaultUsers = new[]
                 {
-                    new AppUser { Id = "USR-00", FullName = "System Administrator", Email = "admin@pccfpistore.com", Role = "Administrator", Status = "Active", LastLogin = DateTime.Now },
-                    new AppUser { Id = "USR-01", FullName = "Stephanie Sharkey", Email = "stephanie@pccfpistore.com", Role = "Administrator", Status = "Active", LastLogin = DateTime.Now },
-                    new AppUser { Id = "USR-02", FullName = "Alexander Vance", Email = "alex@pccfpistore.com", Role = "Store Manager", Status = "Active", LastLogin = DateTime.Now },
-                    new AppUser { Id = "USR-03", FullName = "Mia Thornton", Email = "mia.t@pccfpistore.com", Role = "Cashier", Status = "Active", LastLogin = DateTime.Now }
+                    new AppUser { Id = "USR-00", FullName = "System Administrator", Email = "admin@pccfpistore.com", Role = "Administrator", Status = "Active", LastLogin = DateTime.Now, PasswordHash = PasswordSecurityHelper.HashPassword("admin123") },
+                    new AppUser { Id = "USR-01", FullName = "Stephanie Sharkey", Email = "stephanie@pccfpistore.com", Role = "Administrator", Status = "Active", LastLogin = DateTime.Now, PasswordHash = PasswordSecurityHelper.HashPassword("admin123") },
+                    new AppUser { Id = "USR-02", FullName = "Alexander Vance", Email = "alex@pccfpistore.com", Role = "Store Manager", Status = "Active", LastLogin = DateTime.Now, PasswordHash = PasswordSecurityHelper.HashPassword("manager123") },
+                    new AppUser { Id = "USR-03", FullName = "Mia Thornton", Email = "mia.t@pccfpistore.com", Role = "Cashier", Status = "Active", LastLogin = DateTime.Now, PasswordHash = PasswordSecurityHelper.HashPassword("cashier123") }
                 };
                 foreach (var u in defaultUsers) AddUser(u);
             }
@@ -669,6 +671,12 @@ namespace assignment_code.Services
             {
                 user.Id = $"USR-{DateTime.Now.Ticks % 10000:D4}";
             }
+            if (string.IsNullOrEmpty(user.PasswordHash))
+            {
+                string pass = string.IsNullOrEmpty(user.RawPassword) ? "password123" : user.RawPassword;
+                user.PasswordHash = PasswordSecurityHelper.HashPassword(pass);
+            }
+
             user.LastLogin = DateTime.Now;
             Users.Add(user);
 
@@ -679,13 +687,13 @@ namespace assignment_code.Services
                     conn.Open();
                     string sql = DbConnectionHelper.IsSqlServer ?
                         @"IF EXISTS (SELECT 1 FROM users WHERE id = @id)
-                            UPDATE users SET full_name=@name, email=@email, role=@role, status=@status WHERE id=@id
+                            UPDATE users SET full_name=@name, email=@email, password_hash=@pwd, role=@role, status=@status WHERE id=@id
                           ELSE
-                            INSERT INTO users (id, full_name, email, role, status, last_login) VALUES (@id, @name, @email, @role, @status, @lastLogin);"
+                            INSERT INTO users (id, full_name, email, password_hash, role, status, last_login) VALUES (@id, @name, @email, @pwd, @role, @status, @lastLogin);"
                         :
-                        @"INSERT INTO users (id, full_name, email, role, status, last_login) 
-                          VALUES (@id, @name, @email, @role, @status, @lastLogin) 
-                          ON CONFLICT (id) DO UPDATE SET full_name=EXCLUDED.full_name, role=EXCLUDED.role, status=EXCLUDED.status;";
+                        @"INSERT INTO users (id, full_name, email, password_hash, role, status, last_login) 
+                          VALUES (@id, @name, @email, @pwd, @role, @status, @lastLogin) 
+                          ON CONFLICT (id) DO UPDATE SET full_name=EXCLUDED.full_name, email=EXCLUDED.email, password_hash=EXCLUDED.password_hash, role=EXCLUDED.role, status=EXCLUDED.status;";
 
                     using (var cmd = conn.CreateCommand())
                     {
@@ -693,6 +701,7 @@ namespace assignment_code.Services
                         cmd.AddParam("@id", user.Id);
                         cmd.AddParam("@name", user.FullName ?? "");
                         cmd.AddParam("@email", user.Email ?? "");
+                        cmd.AddParam("@pwd", user.PasswordHash ?? "");
                         cmd.AddParam("@role", user.Role ?? "Store Staff");
                         cmd.AddParam("@status", user.Status ?? "Active");
                         cmd.AddParam("@lastLogin", user.LastLogin);
@@ -717,6 +726,10 @@ namespace assignment_code.Services
                 existing.Email = user.Email;
                 existing.Role = user.Role;
                 existing.Status = user.Status;
+                if (!string.IsNullOrEmpty(user.PasswordHash))
+                {
+                    existing.PasswordHash = user.PasswordHash;
+                }
             }
 
             try
@@ -726,7 +739,15 @@ namespace assignment_code.Services
                     conn.Open();
                     using (var cmd = conn.CreateCommand())
                     {
-                        cmd.CommandText = "UPDATE users SET full_name=@name, email=@email, role=@role, status=@status WHERE id=@id";
+                        if (!string.IsNullOrEmpty(user.PasswordHash))
+                        {
+                            cmd.CommandText = "UPDATE users SET full_name=@name, email=@email, password_hash=@pwd, role=@role, status=@status WHERE id=@id";
+                            cmd.AddParam("@pwd", user.PasswordHash);
+                        }
+                        else
+                        {
+                            cmd.CommandText = "UPDATE users SET full_name=@name, email=@email, role=@role, status=@status WHERE id=@id";
+                        }
                         cmd.AddParam("@id", user.Id);
                         cmd.AddParam("@name", user.FullName ?? "");
                         cmd.AddParam("@email", user.Email ?? "");
@@ -1053,13 +1074,24 @@ namespace assignment_code.Services
             }
 
             // 4. Verify password if password_hash is set on the database record
-            if (!string.IsNullOrEmpty(dbPasswordHash) && !string.IsNullOrEmpty(password))
+            string targetHash = dbPasswordHash ?? user.PasswordHash;
+            if (!string.IsNullOrEmpty(targetHash) && !string.IsNullOrEmpty(password))
             {
                 bool isPlaceholder = (password.Trim() == "••••••••" || password.Trim() == "********");
-                if (!isPlaceholder && !string.Equals(password, dbPasswordHash, StringComparison.Ordinal))
+                if (!isPlaceholder)
                 {
-                    errorMessage = TranslationManager.T("InvalidCredentials", "Invalid credentials. Please verify your email and password.");
-                    return null;
+                    bool isValid = PasswordSecurityHelper.VerifyPassword(password, targetHash, out bool needsRehash);
+                    if (!isValid)
+                    {
+                        errorMessage = TranslationManager.T("InvalidCredentials", "Invalid credentials. Please verify your email and password.");
+                        return null;
+                    }
+
+                    // Auto-upgrade legacy plaintext password to secure PBKDF2 hash upon successful login
+                    if (needsRehash)
+                    {
+                        UpgradeUserPassword(user.Id, password);
+                    }
                 }
             }
 
@@ -1074,6 +1106,31 @@ namespace assignment_code.Services
             user.LastLogin = DateTime.Now;
             CurrentUser = user;
             return user;
+        }
+
+        private void UpgradeUserPassword(string userId, string plainPassword)
+        {
+            try
+            {
+                string newHash = PasswordSecurityHelper.HashPassword(plainPassword);
+                using (var conn = DbConnectionHelper.CreateConnection())
+                {
+                    conn.Open();
+                    using (var cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = "UPDATE users SET password_hash = @hash WHERE id = @id";
+                        cmd.AddParam("@hash", newHash);
+                        cmd.AddParam("@id", userId);
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+                var cached = Users.FirstOrDefault(u => u.Id == userId);
+                if (cached != null) cached.PasswordHash = newHash;
+            }
+            catch (Exception ex)
+            {
+                LastDatabaseError = ex.Message;
+            }
         }
     }
 }

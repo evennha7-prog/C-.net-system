@@ -66,11 +66,11 @@ namespace assignment_code
                 {
                     InitConsoleOutput();
                     Console.WriteLine("\n========================================================");
-                    Console.WriteLine(" PCCFPI STORE - PostgreSQL Database Migrator");
+                    Console.WriteLine($" PCCFPI STORE - {DbConnectionHelper.ProviderDisplayName} Database Migrator");
                     Console.WriteLine("========================================================");
-                    Console.WriteLine($"Target Host: {EnvLoader.Get("DB_HOST")}:{EnvLoader.Get("DB_PORT")}");
-                    Console.WriteLine($"Database:    {EnvLoader.Get("DB_DATABASE")}");
-                    Console.WriteLine($"User:        {EnvLoader.Get("DB_USERNAME")}\n");
+                    Console.WriteLine($"Provider:    {DbConnectionHelper.ProviderDisplayName}");
+                    Console.WriteLine($"Server/Host: {DbConnectionHelper.ServerDisplayName}");
+                    Console.WriteLine($"Database:    {EnvLoader.Get("DB_DATABASE")}\n");
                     Console.WriteLine("Executing migrations...");
 
                     var result = DatabaseMigrator.Migrate(seedInitialData: true);
@@ -99,7 +99,7 @@ namespace assignment_code
                 else if (cmd == "test-db" || cmd == "testdb" || cmd == "check-db")
                 {
                     InitConsoleOutput();
-                    Console.WriteLine("\nTesting PostgreSQL Connection...");
+                    Console.WriteLine($"\nTesting {DbConnectionHelper.ProviderDisplayName} Connection...");
                     string msg;
                     long ms;
                     bool ok = DbConnectionHelper.TestConnection(out msg, out ms);

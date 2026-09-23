@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using assignment_code.Models;
 using assignment_code.Services;
+using assignment_code.Services.Database;
 
 namespace assignment_code.UI
 {
@@ -160,7 +161,7 @@ namespace assignment_code.UI
             SetLoadingProgress("Verifying credentials...");
 
             await Task.Delay(250);
-            SetLoadingProgress("Connecting to PostgreSQL...");
+            SetLoadingProgress($"Connecting to {DbConnectionHelper.ProviderDisplayName}...");
 
             string errMsg;
             var user = StoreDataService.Instance.Authenticate(username, password, out errMsg);

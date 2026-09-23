@@ -10,5 +10,7 @@ namespace assignment_code.Models
         public string Role { get; set; } // "Administrator", "Store Manager", "Cashier"
         public string Status { get; set; } // "Active", "Suspended"
         public DateTime LastLogin { get; set; }
+        public string PasswordHash { get; set; }
+        public string RawPassword { get; set; } // Optional transient plain text password
     }
 }

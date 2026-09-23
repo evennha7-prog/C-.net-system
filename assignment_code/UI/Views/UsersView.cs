@@ -104,7 +104,7 @@ namespace assignment_code.UI.Views
             };
             _btnAddUser = new ModernButton
             {
-                Text = "+ Add Staff Member",
+                Text = "Add Staff Member",
                 IconName = "plus",
                 ButtonType = ModernButtonType.Primary,
                 Size = new Size(185, 38)
@@ -264,7 +264,7 @@ namespace assignment_code.UI.Views
             }
             else if (e.ColumnIndex == 7) // Delete
             {
-                string confirmMsg = TranslationManager.T("ConfirmDeleteStaff", $"Are you sure you want to delete staff account '{user.FullName}' from PostgreSQL database?");
+                string confirmMsg = TranslationManager.T("ConfirmDeleteStaff", $"Are you sure you want to delete staff account '{user.FullName}' from the database?");
                 if (MessageBox.Show(confirmMsg, "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
                 {
                     _dataService.DeleteUser(user.Id);
@@ -362,7 +362,7 @@ namespace assignment_code.UI.Views
         {
             _lblTitle.Text = TranslationManager.T("Users", "Staff & User Access");
             _lblSubtitle.Text = TranslationManager.T("UsersSubtitle", "Manage employee accounts, security roles, system permissions, and login audit.");
-            _btnAddUser.Text = TranslationManager.T("AddStaffMember", "+ Add Staff Member");
+            _btnAddUser.Text = TranslationManager.T("AddStaffMember", "Add Staff Member");
             _btnRefresh.Text = TranslationManager.T("Refresh", "Refresh");
 
             if (_grid.Columns.Count >= 8)

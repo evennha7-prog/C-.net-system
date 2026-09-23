@@ -28,7 +28,7 @@ namespace assignment_code.UI.Views
             _dataService.DataRefreshed += (s, e) => RefreshView();
             TranslationManager.LanguageChanged += (s, e) =>
             {
-                _btnAddCategory.Text = TranslationManager.T("AddNewCategory", "+ Add New Category");
+                _btnAddCategory.Text = TranslationManager.T("AddNewCategory", "Add New Category");
                 RefreshView();
             };
         }
@@ -178,7 +178,7 @@ namespace assignment_code.UI.Views
             btnDel.FlatAppearance.BorderColor = ThemeManager.DangerRed;
             btnDel.Click += (s, e) =>
             {
-                if (MessageBox.Show($"Are you sure you want to delete category '{cat.Name}' from PostgreSQL database?", "Confirm Delete Category", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+                if (MessageBox.Show($"Are you sure you want to delete category '{cat.Name}' from the database?", "Confirm Delete Category", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
                 {
                     _dataService.DeleteCategory(cat.Id);
                     PopulateCards();

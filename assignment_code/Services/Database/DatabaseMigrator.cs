@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using assignment_code.Services.Security;
 
 namespace assignment_code.Services.Database
 {
@@ -94,6 +95,9 @@ namespace assignment_code.Services.Database
             {
                 SeedInitialDataSqlServer(conn, tx, result);
             }
+
+            // 5. Encrypt Passwords
+            EncryptExistingPasswords(conn, tx, result);
         }
 
         private static void CreateMigrationsHistoryTableSqlServer(DbConnection conn, DbTransaction tx, MigrationResult result)
@@ -329,18 +333,30 @@ namespace assignment_code.Services.Database
             int userCount = Convert.ToInt32(ExecuteScalar(conn, tx, "SELECT COUNT(*) FROM users;"));
             if (userCount == 0)
             {
+                string adminHash = PasswordSecurityHelper.HashPassword("admin123");
+                string managerHash = PasswordSecurityHelper.HashPassword("manager123");
+                string cashierHash = PasswordSecurityHelper.HashPassword("cashier123");
+
                 const string seedUsersSql = @"
                     INSERT INTO users (id, full_name, email, password_hash, role, status, last_login) VALUES
-                    ('USR-00', 'System Administrator', 'admin@pccfpistore.com', 'admin123', 'Administrator', 'Active', GETDATE()),
-                    ('USR-01', 'Stephanie Sharkey', 'stephanie@pccfpistore.com', 'admin123', 'Administrator', 'Active', DATEADD(hour, -1, GETDATE())),
-                    ('USR-02', 'Alexander Vance', 'alex@pccfpistore.com', 'manager123', 'Store Manager', 'Active', DATEADD(hour, -3, GETDATE())),
-                    ('USR-03', 'Mia Thornton', 'mia.t@pccfpistore.com', 'cashier123', 'Cashier', 'Active', DATEADD(hour, -5, GETDATE())),
-                    ('USR-04', 'Jordan Lee', 'jordan@pccfpistore.com', 'cashier123', 'Cashier', 'Active', DATEADD(day, -1, GETDATE())),
-                    ('USR-05', 'Carlos Mendez', 'carlos@pccfpistore.com', 'manager123', 'Store Manager', 'Suspended', DATEADD(day, -14, GETDATE()));
+                    ('USR-00', 'System Administrator', 'admin@pccfpistore.com', @admin, 'Administrator', 'Active', GETDATE()),
+                    ('USR-01', 'Stephanie Sharkey', 'stephanie@pccfpistore.com', @admin, 'Administrator', 'Active', DATEADD(hour, -1, GETDATE())),
+                    ('USR-02', 'Alexander Vance', 'alex@pccfpistore.com', @mgr, 'Store Manager', 'Active', DATEADD(hour, -3, GETDATE())),
+                    ('USR-03', 'Mia Thornton', 'mia.t@pccfpistore.com', @csh, 'Cashier', 'Active', DATEADD(hour, -5, GETDATE())),
+                    ('USR-04', 'Jordan Lee', 'jordan@pccfpistore.com', @csh, 'Cashier', 'Active', DATEADD(day, -1, GETDATE())),
+                    ('USR-05', 'Carlos Mendez', 'carlos@pccfpistore.com', @mgr, 'Store Manager', 'Suspended', DATEADD(day, -14, GETDATE()));
                 ";
-                int inserted = ExecuteNonQuery(conn, tx, seedUsersSql);
-                result.RowsSeeded += inserted;
-                result.ExecutedSteps.Add($"[Seed] Seeded {inserted} default user accounts.");
+                using (var cmd = conn.CreateCommand())
+                {
+                    cmd.Transaction = tx;
+                    cmd.CommandText = seedUsersSql;
+                    cmd.AddParam("@admin", adminHash);
+                    cmd.AddParam("@mgr", managerHash);
+                    cmd.AddParam("@csh", cashierHash);
+                    int inserted = cmd.ExecuteNonQuery();
+                    result.RowsSeeded += inserted;
+                    result.ExecutedSteps.Add($"[Seed] Seeded {inserted} default user accounts with encrypted PBKDF2 passwords.");
+                }
             }
 
             // 2. Seed Categories
@@ -506,6 +522,9 @@ namespace assignment_code.Services.Database
             {
                 SeedInitialDataPostgreSql(conn, tx, result);
             }
+
+            // 5. Encrypt Passwords
+            EncryptExistingPasswords(conn, tx, result);
         }
 
         private static void CreateMigrationsHistoryTablePostgreSql(DbConnection conn, DbTransaction tx, MigrationResult result)
@@ -708,19 +727,31 @@ namespace assignment_code.Services.Database
             int userCount = Convert.ToInt32(ExecuteScalar(conn, tx, "SELECT COUNT(*) FROM users;"));
             if (userCount == 0)
             {
+                string adminHash = PasswordSecurityHelper.HashPassword("admin123");
+                string managerHash = PasswordSecurityHelper.HashPassword("manager123");
+                string cashierHash = PasswordSecurityHelper.HashPassword("cashier123");
+
                 const string seedUsersSql = @"
                     INSERT INTO users (id, full_name, email, password_hash, role, status, last_login) VALUES
-                    ('USR-00', 'System Administrator', 'admin@pccfpistore.com', 'admin123', 'Administrator', 'Active', NOW()),
-                    ('USR-01', 'Stephanie Sharkey', 'stephanie@pccfpistore.com', 'admin123', 'Administrator', 'Active', NOW() - INTERVAL '1 hour'),
-                    ('USR-02', 'Alexander Vance', 'alex@pccfpistore.com', 'manager123', 'Store Manager', 'Active', NOW() - INTERVAL '3 hour'),
-                    ('USR-03', 'Mia Thornton', 'mia.t@pccfpistore.com', 'cashier123', 'Cashier', 'Active', NOW() - INTERVAL '5 hour'),
-                    ('USR-04', 'Jordan Lee', 'jordan@pccfpistore.com', 'cashier123', 'Cashier', 'Active', NOW() - INTERVAL '1 day'),
-                    ('USR-05', 'Carlos Mendez', 'carlos@pccfpistore.com', 'manager123', 'Store Manager', 'Suspended', NOW() - INTERVAL '14 day')
+                    ('USR-00', 'System Administrator', 'admin@pccfpistore.com', @admin, 'Administrator', 'Active', NOW()),
+                    ('USR-01', 'Stephanie Sharkey', 'stephanie@pccfpistore.com', @admin, 'Administrator', 'Active', NOW() - INTERVAL '1 hour'),
+                    ('USR-02', 'Alexander Vance', 'alex@pccfpistore.com', @mgr, 'Store Manager', 'Active', NOW() - INTERVAL '3 hour'),
+                    ('USR-03', 'Mia Thornton', 'mia.t@pccfpistore.com', @csh, 'Cashier', 'Active', NOW() - INTERVAL '5 hour'),
+                    ('USR-04', 'Jordan Lee', 'jordan@pccfpistore.com', @csh, 'Cashier', 'Active', NOW() - INTERVAL '1 day'),
+                    ('USR-05', 'Carlos Mendez', 'carlos@pccfpistore.com', @mgr, 'Store Manager', 'Suspended', NOW() - INTERVAL '14 day')
                     ON CONFLICT (id) DO NOTHING;
                 ";
-                int inserted = ExecuteNonQuery(conn, tx, seedUsersSql);
-                result.RowsSeeded += inserted;
-                result.ExecutedSteps.Add($"[Seed] Seeded {inserted} default user accounts.");
+                using (var cmd = conn.CreateCommand())
+                {
+                    cmd.Transaction = tx;
+                    cmd.CommandText = seedUsersSql;
+                    cmd.AddParam("@admin", adminHash);
+                    cmd.AddParam("@mgr", managerHash);
+                    cmd.AddParam("@csh", cashierHash);
+                    int inserted = cmd.ExecuteNonQuery();
+                    result.RowsSeeded += inserted;
+                    result.ExecutedSteps.Add($"[Seed] Seeded {inserted} default user accounts with encrypted PBKDF2 passwords.");
+                }
             }
 
             // 2. Seed Categories
@@ -908,6 +939,53 @@ namespace assignment_code.Services.Database
                 cmd.Transaction = tx;
                 cmd.CommandText = sql;
                 return cmd.ExecuteScalar();
+            }
+        }
+
+        private static void EncryptExistingPasswords(DbConnection conn, DbTransaction tx, MigrationResult result)
+        {
+            var unhashedUsers = new List<Tuple<string, string>>();
+            using (var cmd = conn.CreateCommand())
+            {
+                cmd.Transaction = tx;
+                cmd.CommandText = "SELECT id, password_hash FROM users WHERE password_hash IS NOT NULL AND password_hash <> ''";
+                using (var reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        string id = reader.GetString(0);
+                        string raw = reader.IsDBNull(1) ? null : reader.GetString(1);
+                        if (!string.IsNullOrEmpty(raw) && !PasswordSecurityHelper.IsHashed(raw))
+                        {
+                            unhashedUsers.Add(Tuple.Create(id, raw));
+                        }
+                    }
+                }
+            }
+
+            int upgraded = 0;
+            foreach (var item in unhashedUsers)
+            {
+                string newHash = PasswordSecurityHelper.HashPassword(item.Item2);
+                using (var updateCmd = conn.CreateCommand())
+                {
+                    updateCmd.Transaction = tx;
+                    updateCmd.CommandText = "UPDATE users SET password_hash = @hash WHERE id = @id";
+                    updateCmd.AddParam("@hash", newHash);
+                    updateCmd.AddParam("@id", item.Item1);
+                    updateCmd.ExecuteNonQuery();
+                    upgraded++;
+                }
+            }
+
+            if (upgraded > 0)
+            {
+                RecordMigration(conn, tx, "009_encrypt_existing_passwords");
+                result.ExecutedSteps.Add($"[Security] Encrypted {upgraded} plaintext passwords using PBKDF2-HMAC-SHA256.");
+            }
+            else
+            {
+                result.ExecutedSteps.Add("[Security] All user passwords are fully encrypted.");
             }
         }
     }

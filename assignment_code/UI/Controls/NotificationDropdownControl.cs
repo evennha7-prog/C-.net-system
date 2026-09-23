@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using assignment_code.Services;
+using assignment_code.Services.Database;
 
 namespace assignment_code.UI.Controls
 {
@@ -76,8 +77,8 @@ namespace assignment_code.UI.Controls
             {
                 Id = "3",
                 Title = TranslationManager.CurrentLanguage == AppLanguage.Khmer
-                    ? "បានភ្ជាប់ PostgreSQL មូលដ្ឋានទិន្នន័យជោគជ័យ"
-                    : "PostgreSQL Database connected successfully",
+                    ? $"បានភ្ជាប់ {DbConnectionHelper.ProviderDisplayName} មូលដ្ឋានទិន្នន័យជោគជ័យ"
+                    : $"{DbConnectionHelper.ProviderDisplayName} database connected successfully",
                 TimeText = "1h ago",
                 IconName = "settings",
                 IconColor = Color.FromArgb(59, 130, 246)

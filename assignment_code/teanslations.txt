@@ -76,13 +76,13 @@ CreditCard=Credit Card|កាតធនាគារ
 QRPay=QR Pay|ស្កេន QR
 CartIsEmpty=Cart is Empty|គ្មានទំនិញក្នុងកន្ត្រកទេ
 TapToAddToOrder=Click any product to add|សូមចុចលើទំនិញដើម្បីបន្ថែម
-Add=+ Add|+ បន្ថែម
+Add=Add|បន្ថែម
 
 # Common Actions & Buttons
-AddNewProduct=+ Add New Product|+ បន្ថែមទំនិញថ្មី
-AddNewCategory=+ Add New Category|+ បន្ថែមប្រភេទថ្មី
-AddNewCustomer=+ Add New Customer|+ បន្ថែមអតិថិជនថ្មី
-AddStaffMember=+ Add Staff Member|+ បន្ថែមបុគ្គលិក
+AddNewProduct=Add New Product|បន្ថែមទំនិញថ្មី
+AddNewCategory=Add New Category|បន្ថែមប្រភេទថ្មី
+AddNewCustomer=Add New Customer|បន្ថែមអតិថិជនថ្មី
+AddStaffMember=Add Staff Member|បន្ថែមបុគ្គលិក
 ExportReport=Export Report (CSV)|ទាញយករបាយការណ៍ (CSV)
 SaveSettings=Save Store Settings|រក្សាទុកការកំណត់
 Delete=Delete|លុប
@@ -122,7 +122,7 @@ CustomerName=Customer Name:|ឈ្មោះអតិថិជន:
 PaymentMethod=Payment Method:|វិធីទូទាត់:
 CompleteSale=Complete Sale (Checkout)|ទូទាត់ប្រាក់ (បញ្ចប់ការលក់)
 ClearCart=Clear Cart|សម្អាតកន្ត្រក
-Add=+ Add|+ បន្ថែម
+Add=Add|បន្ថែម
 InStock=in stock|ក្នុងស្តុក
 OutOfStock=Out of stock|អស់ពីស្តុក
 
@@ -192,7 +192,7 @@ QuickLoginAs=Quick demo accounts:|គណនីគំរូរហ័ស:
 InvalidCredentials=Invalid credentials. Please verify your email and password.|ព័ត៌មានមិនត្រឹមត្រូវទេ។ សូមពិនិត្យមើលអ៊ីមែល និងពាក្យសម្ងាត់ឡើងវិញ។
 AccountSuspended=This account is suspended. Please contact administrator.|គណនីនេះត្រូវបានផ្អាក។ សូមទាក់ទងអ្នកគ្រប់គ្រង។
 LoginSuccess=Login successful! Loading dashboard...|ការចូលបានជោគជ័យ! កំពុងដំណើរការ...
-DatabaseConnected=PostgreSQL Connected|បានភ្ជាប់ PostgreSQL
+DatabaseConnected=Database Connected|បានភ្ជាប់មូលដ្ឋានទិន្នន័យ
 DemoMode=Demo / Local Mode|របៀបសាកល្បង
 UsernamePlaceholder=stephanie@pccfpistore.com|stephanie@pccfpistore.com
 PasswordPlaceholder=Enter your password|បញ្ចូលពាក្យសម្ងាត់
