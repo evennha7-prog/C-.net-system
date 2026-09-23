@@ -61,11 +61,10 @@ namespace assignment_code.UI.Controls
 
             _mainNavItems.AddRange(new[] { dashboard, products, categories, _saleParentBtn, _posBtn, _listSaleBtn, order, customer, report, users });
 
-            var appearance = new NavItemButton { Text = "Appearance", TranslationKey = "Appearance", IconName = "appearance" };
             var settings = new NavItemButton { Text = "Settings", TranslationKey = "Settings", IconName = "settings" };
             var logout = new NavItemButton { Text = "Logout", TranslationKey = "Logout", IconName = "logout", IsDangerAction = true };
 
-            _systemNavItems.AddRange(new[] { appearance, settings, logout });
+            _systemNavItems.AddRange(new[] { settings, logout });
 
             foreach (var item in _mainNavItems)
             {

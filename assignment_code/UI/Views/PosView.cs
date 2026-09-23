@@ -14,6 +14,10 @@ namespace assignment_code.UI.Views
         private StoreDataService _dataService = StoreDataService.Instance;
         private Panel _leftProductArea;
         private FlowLayoutPanel _categoryPillsPanel;
+        private Panel _posFilterRowPanel;
+        private ModernSearchBox _txtPosSearch;
+        private ComboBox _cboStockFilter;
+        private Label _lblAvailableCount;
         private FlowLayoutPanel _productsGrid;
         private Panel _rightCartPanel;
         private FlowLayoutPanel _cartItemsList;
@@ -29,6 +33,8 @@ namespace assignment_code.UI.Views
         private Button _btnCheckout;
         private Button _btnClearCart;
         private string _selectedCategory = "All";
+        private string _searchQuery = "";
+        private string _stockFilter = "All";
 
         public PosView()
         {
@@ -43,10 +49,24 @@ namespace assignment_code.UI.Views
             DoubleBufferHelper.EnableDoubleBufferingTree(this);
             RefreshView();
 
-            _dataService.CartChanged += (s, e) => UpdateCartUI();
+            _dataService.CartChanged += (s, e) =>
+            {
+                UpdateCartUI();
+                _productsGrid?.Invalidate(true);
+            };
             _dataService.DataRefreshed += (s, e) => RefreshView();
             ThemeManager.ThemeChanged += (s, e) => ApplyTheme();
             TranslationManager.LanguageChanged += (s, e) => RefreshView();
+        }
+
+        public void ApplySearch(string query)
+        {
+            _searchQuery = query ?? "";
+            if (_txtPosSearch != null && _txtPosSearch.Text != _searchQuery)
+            {
+                _txtPosSearch.Text = _searchQuery;
+            }
+            PopulateProducts();
         }
 
         public void RefreshView()
@@ -74,14 +94,79 @@ namespace assignment_code.UI.Views
                 Location = new Point(0, 0),
                 Height = 44,
                 BackColor = Color.Transparent,
-                WrapContents = false,
-                AutoScroll = false
+                WrapContents = true,
+                AutoScroll = false,
+                Margin = new Padding(0),
+                Padding = new Padding(0, 2, 0, 4)
             };
             _leftProductArea.Controls.Add(_categoryPillsPanel);
 
+            // Filter & Search Toolbar Row
+            _posFilterRowPanel = new Panel
+            {
+                Location = new Point(0, 42),
+                Height = 36,
+                BackColor = Color.Transparent
+            };
+            _leftProductArea.Controls.Add(_posFilterRowPanel);
+
+            _txtPosSearch = new ModernSearchBox
+            {
+                PlaceholderText = TranslationManager.T("SearchProductsPos", "Search products or SKU..."),
+                Size = new Size(220, 32),
+                Location = new Point(0, 2)
+            };
+            _txtPosSearch.SearchTextChanged += (s, e) =>
+            {
+                _searchQuery = _txtPosSearch.Text.Trim();
+                PopulateProducts();
+            };
+            _posFilterRowPanel.Controls.Add(_txtPosSearch);
+
+            _cboStockFilter = new ComboBox
+            {
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                Font = FontHelper.CreateFont(8.5F, FontStyle.Regular),
+                Size = new Size(130, 28),
+                Location = new Point(228, 4),
+                BackColor = ThemeManager.CardBackground,
+                ForeColor = ThemeManager.TextPrimary,
+                FlatStyle = FlatStyle.Flat
+            };
+            _cboStockFilter.Items.AddRange(new object[] {
+                TranslationManager.T("All", "All"),
+                TranslationManager.T("InStock", "In Stock"),
+                TranslationManager.T("LowStock", "Low Stock"),
+                TranslationManager.T("OutOfStock", "Out of Stock")
+            });
+            _cboStockFilter.SelectedIndex = 0;
+            _cboStockFilter.SelectedIndexChanged += (s, e) =>
+            {
+                switch (_cboStockFilter.SelectedIndex)
+                {
+                    case 1: _stockFilter = "InStock"; break;
+                    case 2: _stockFilter = "LowStock"; break;
+                    case 3: _stockFilter = "OutOfStock"; break;
+                    default: _stockFilter = "All"; break;
+                }
+                PopulateProducts();
+            };
+            _posFilterRowPanel.Controls.Add(_cboStockFilter);
+
+            _lblAvailableCount = new Label
+            {
+                Text = "",
+                Font = FontHelper.CreateFont(8.5F, FontStyle.Regular),
+                ForeColor = ThemeManager.TextSecondary,
+                AutoSize = true,
+                Location = new Point(368, 8),
+                BackColor = Color.Transparent
+            };
+            _posFilterRowPanel.Controls.Add(_lblAvailableCount);
+
             _productsGrid = new FlowLayoutPanel
             {
-                Location = new Point(0, 50),
+                Location = new Point(0, 82),
                 BackColor = Color.Transparent,
                 AutoScroll = true,
                 WrapContents = true
@@ -270,67 +355,168 @@ namespace assignment_code.UI.Views
 
         private void PopulateCategoryPills()
         {
+            if (_categoryPillsPanel == null) return;
+            _categoryPillsPanel.SuspendLayout();
             _categoryPillsPanel.Controls.Clear();
             var categories = new[] { "All" }.Concat(_dataService.Categories.Select(c => c.Name)).ToArray();
 
+            int allCount = _dataService.Products.Count;
+
             foreach (var cat in categories)
             {
+                int count = cat == "All" ? allCount : _dataService.Products.Count(p => string.Equals(p.Category, cat, StringComparison.OrdinalIgnoreCase));
                 string catName = cat == "All" ? TranslationManager.T("All", "All") : TranslationManager.T(cat, cat);
-                string displayText = $"● {catName}";
 
-                Button btn = new Button
+                var pill = new PosCategoryPillButton
                 {
-                    Text = displayText,
-                    Font = FontHelper.CreateFontForText(displayText, 9F, FontStyle.Bold),
-                    Height = 34,
-                    AutoSize = true,
-                    Margin = new Padding(0, 0, 8, 0),
-                    Padding = new Padding(10, 2, 10, 2),
-                    FlatStyle = FlatStyle.Flat,
-                    Cursor = Cursors.Hand
+                    CategoryKey = cat,
+                    CategoryTitle = catName,
+                    ProductCount = count,
+                    CategoryColor = GetCategoryColor(cat),
+                    IsSelected = (cat == _selectedCategory),
+                    Margin = new Padding(0, 0, 8, 6)
                 };
-                btn.FlatAppearance.BorderSize = 0;
 
-                bool isSelected = (cat == _selectedCategory);
-                btn.BackColor = isSelected ? ThemeManager.AccentBlue : ThemeManager.CardBackground;
-                btn.ForeColor = isSelected ? Color.White : (cat == "All" ? ThemeManager.TextPrimary : GetCategoryColor(cat));
-
-                btn.Click += (s, e) =>
+                pill.Click += (s, e) =>
                 {
                     _selectedCategory = cat;
                     PopulateCategoryPills();
                     PopulateProducts();
                 };
 
-                _categoryPillsPanel.Controls.Add(btn);
+                _categoryPillsPanel.Controls.Add(pill);
             }
+            _categoryPillsPanel.ResumeLayout(true);
+            AdjustLeftProductAreaLayout();
         }
 
         private void PopulateProducts()
         {
+            if (_productsGrid == null) return;
+            _productsGrid.SuspendLayout();
             _productsGrid.Controls.Clear();
-            var filtered = _dataService.Products.AsEnumerable();
-            if (_selectedCategory != "All")
-                filtered = filtered.Where(p => p.Category == _selectedCategory);
 
-            foreach (var prd in filtered)
+            var filtered = _dataService.Products.AsEnumerable();
+
+            // 1. Category Filter
+            if (_selectedCategory != "All")
+                filtered = filtered.Where(p => string.Equals(p.Category, _selectedCategory, StringComparison.OrdinalIgnoreCase));
+
+            // 2. Stock Filter
+            if (_stockFilter == "InStock")
+                filtered = filtered.Where(p => p.Stock > 0);
+            else if (_stockFilter == "LowStock")
+                filtered = filtered.Where(p => p.Stock > 0 && p.Stock <= 10);
+            else if (_stockFilter == "OutOfStock")
+                filtered = filtered.Where(p => p.Stock <= 0);
+
+            // 3. Search Filter
+            if (!string.IsNullOrWhiteSpace(_searchQuery))
             {
-                var card = CreateProductPosCard(prd);
-                _productsGrid.Controls.Add(card);
+                string q = _searchQuery.Trim().ToLowerInvariant();
+                filtered = filtered.Where(p =>
+                    (p.Name != null && p.Name.ToLowerInvariant().Contains(q)) ||
+                    (p.Sku != null && p.Sku.ToLowerInvariant().Contains(q)) ||
+                    (p.Category != null && p.Category.ToLowerInvariant().Contains(q)) ||
+                    TranslationManager.T(p.Name, p.Name).ToLowerInvariant().Contains(q) ||
+                    TranslationManager.T(p.Category, p.Category).ToLowerInvariant().Contains(q) ||
+                    p.Price.ToString("N2").Contains(q)
+                );
             }
+
+            // 4. Logical Sort: In-Stock items first, out-of-stock items at the end
+            var productList = filtered
+                .OrderByDescending(p => p.Stock > 0)
+                .ThenBy(p => p.Category)
+                .ThenBy(p => p.Sku)
+                .ToList();
+
+            if (_lblAvailableCount != null)
+            {
+                string countSuffix = TranslationManager.T("ItemsAvailable", "products available");
+                _lblAvailableCount.Text = $"{productList.Count} {countSuffix}";
+            }
+
+            if (productList.Count == 0)
+            {
+                ShowEmptyProductsState();
+            }
+            else
+            {
+                foreach (var prd in productList)
+                {
+                    var card = CreateProductPosCard(prd);
+                    _productsGrid.Controls.Add(card);
+                }
+            }
+
+            _productsGrid.ResumeLayout(true);
+        }
+
+        private void ShowEmptyProductsState()
+        {
+            Panel emptyPanel = new Panel
+            {
+                Size = new Size(Math.Max(300, _productsGrid.Width - 30), 220),
+                BackColor = Color.Transparent,
+                Margin = new Padding(10, 30, 10, 10)
+            };
+
+            emptyPanel.Paint += (s, e) =>
+            {
+                Graphics g = e.Graphics;
+                GraphicsHelper.SetHighQuality(g);
+
+                Rectangle iconRect = new Rectangle((emptyPanel.Width - 48) / 2, 20, 48, 48);
+                GraphicsHelper.DrawIcon(g, "search", iconRect, ThemeManager.TextSecondary, 2.2f);
+
+                string msg = TranslationManager.T("NoProductsFound", "No products found matching your search.");
+                using (Font f = FontHelper.CreateFontForText(msg, 10F, FontStyle.Bold))
+                using (SolidBrush sb = new SolidBrush(ThemeManager.TextPrimary))
+                {
+                    SizeF sz = g.MeasureString(msg, f);
+                    g.DrawString(msg, f, sb, (emptyPanel.Width - sz.Width) / 2, 80);
+                }
+            };
+
+            Button btnReset = new Button
+            {
+                Text = TranslationManager.T("ResetFilter", "Reset Filter"),
+                Font = FontHelper.CreateFont(9F, FontStyle.Bold),
+                Size = new Size(150, 34),
+                Location = new Point((emptyPanel.Width - 150) / 2, 120),
+                FlatStyle = FlatStyle.Flat,
+                BackColor = ThemeManager.AccentBlue,
+                ForeColor = Color.White,
+                Cursor = Cursors.Hand
+            };
+            btnReset.FlatAppearance.BorderSize = 0;
+            btnReset.Click += (s, e) =>
+            {
+                _searchQuery = "";
+                _stockFilter = "All";
+                _selectedCategory = "All";
+                if (_txtPosSearch != null) _txtPosSearch.Text = "";
+                if (_cboStockFilter != null) _cboStockFilter.SelectedIndex = 0;
+                PopulateCategoryPills();
+                PopulateProducts();
+            };
+            emptyPanel.Controls.Add(btnReset);
+
+            _productsGrid.Controls.Add(emptyPanel);
         }
 
         private Control CreateProductPosCard(Product prd)
         {
             Color catColor = GetCategoryColor(prd.Category);
-            string emoji = GetProductEmoji(prd);
+            bool inStock = prd.Stock > 0;
 
             Panel card = new Panel
             {
-                Size = new Size(195, 246),
+                Size = new Size(198, 252),
                 Margin = new Padding(0, 0, 16, 16),
                 BackColor = ThemeManager.CardBackground,
-                Cursor = Cursors.Hand
+                Cursor = inStock ? Cursors.Hand : Cursors.Default
             };
             DoubleBufferHelper.EnableDoubleBuffering(card);
 
@@ -340,32 +526,42 @@ namespace assignment_code.UI.Views
                 GraphicsHelper.SetHighQuality(g);
                 Rectangle r = new Rectangle(0, 0, card.Width - 1, card.Height - 1);
 
-                // Card background and border
+                // Card background and border (muted background if out of stock)
+                Color cardBg = inStock
+                    ? ThemeManager.CardBackground
+                    : (ThemeManager.IsDark ? Color.FromArgb(24, 28, 38) : Color.FromArgb(246, 248, 252));
+
                 using (GraphicsPath path = GraphicsHelper.GetRoundedRectanglePath(r, 12))
                 {
-                    using (SolidBrush bg = new SolidBrush(ThemeManager.CardBackground))
+                    using (SolidBrush bg = new SolidBrush(cardBg))
                         g.FillPath(bg, path);
-                    using (Pen p = new Pen(ThemeManager.BorderColor, 1f))
+                    using (Pen p = new Pen(inStock ? ThemeManager.BorderColor : ThemeManager.SubtleDivider, 1f))
                         g.DrawPath(p, path);
                 }
 
-                // Top Hero Visual Banner
+                // Top Hero Visual Banner with Vector Illustration
                 Rectangle topBanner = new Rectangle(10, 10, card.Width - 20, 72);
-                using (GraphicsPath bp = GraphicsHelper.GetRoundedRectanglePath(topBanner, 10))
-                {
-                    Color bannerBg = ThemeManager.IsDark
-                        ? Color.FromArgb(40, catColor.R / 4, catColor.G / 4, catColor.B / 4)
-                        : Color.FromArgb(24, catColor);
-                    using (SolidBrush sb = new SolidBrush(bannerBg))
-                        g.FillPath(sb, bp);
-                }
+                DrawProductIllustration(g, prd, topBanner, catColor);
 
-                // Emoji Icon in Hero Banner
-                using (Font eFont = new Font("Segoe UI Emoji", 26F))
-                using (SolidBrush eb = new SolidBrush(Color.Black))
+                // Cart badge if product is already in cart
+                var inCart = _dataService.CurrentCart.FirstOrDefault(c => c.Product.Id == prd.Id);
+                int cartQty = inCart?.Quantity ?? 0;
+                if (cartQty > 0)
                 {
-                    SizeF eSize = g.MeasureString(emoji, eFont);
-                    g.DrawString(emoji, eFont, eb, 10 + (topBanner.Width - eSize.Width) / 2, 10 + (topBanner.Height - eSize.Height) / 2);
+                    string cartBadge = $"✓ {cartQty} {TranslationManager.T("InCartBadge", "in cart")}";
+                    using (Font bFont = FontHelper.CreateFontForText(cartBadge, 7.5F, FontStyle.Bold))
+                    {
+                        SizeF bSize = g.MeasureString(cartBadge, bFont);
+                        int bW = (int)bSize.Width + 12;
+                        Rectangle bRect = new Rectangle(card.Width - 10 - bW - 4, 14, bW, 20);
+                        using (GraphicsPath bp = GraphicsHelper.GetRoundedRectanglePath(bRect, 6))
+                        using (SolidBrush bgBrush = new SolidBrush(ThemeManager.AccentBlue))
+                        using (SolidBrush fgBrush = new SolidBrush(Color.White))
+                        {
+                            g.FillPath(bgBrush, bp);
+                            g.DrawString(cartBadge, bFont, fgBrush, bRect.X + 6, bRect.Y + 2);
+                        }
+                    }
                 }
 
                 // Category Tag Pill (Translated)
@@ -375,48 +571,63 @@ namespace assignment_code.UI.Views
                 using (SolidBrush cFg = new SolidBrush(catColor))
                 {
                     SizeF tSize = g.MeasureString(catTrans, fCat);
-                    Rectangle tagRect = new Rectangle(10, 90, (int)tSize.Width + 10, 18);
+                    Rectangle tagRect = new Rectangle(10, 88, (int)tSize.Width + 10, 18);
                     using (GraphicsPath tp = GraphicsHelper.GetRoundedRectanglePath(tagRect, 6))
                         g.FillPath(cBg, tp);
-                    g.DrawString(catTrans, fCat, cFg, 15, 92);
+                    g.DrawString(catTrans, fCat, cFg, 15, 90);
                 }
 
-                // Product Name (2 full lines without vertical clipping)
-                using (Font fName = FontHelper.CreateFontForText(prd.Name, 9.25F, FontStyle.Bold))
-                using (SolidBrush sb = new SolidBrush(ThemeManager.TextPrimary))
+                // Product Name (Bilingual Hanuman Typography)
+                bool isKhmer = TranslationManager.CurrentLanguage == AppLanguage.Khmer;
+                string khmerName = TranslationManager.T(prd.Name, prd.Name);
+                string mainTitle = isKhmer ? khmerName : prd.Name;
+                string subTitle = isKhmer ? $"{prd.Sku} • {prd.Name}" : $"{prd.Sku} • {catTrans}";
+
+                using (Font fMain = FontHelper.CreateFontForText(mainTitle, 9.5F, FontStyle.Bold))
+                using (SolidBrush sbMain = new SolidBrush(inStock ? ThemeManager.TextPrimary : ThemeManager.TextSecondary))
                 {
-                    RectangleF nameRect = new RectangleF(10, 114, card.Width - 20, 44);
-                    g.DrawString(prd.Name, fName, sb, nameRect);
+                    RectangleF titleRect = new RectangleF(10, 110, card.Width - 20, 22);
+                    StringFormat sf = new StringFormat { Trimming = StringTrimming.EllipsisCharacter, FormatFlags = StringFormatFlags.NoWrap };
+                    g.DrawString(mainTitle, fMain, sbMain, titleRect, sf);
+                }
+
+                using (Font fSub = FontHelper.CreateFontForText(subTitle, 7.75F, FontStyle.Regular))
+                using (SolidBrush sbSub = new SolidBrush(ThemeManager.TextSecondary))
+                {
+                    RectangleF subRect = new RectangleF(10, 134, card.Width - 20, 18);
+                    StringFormat sf = new StringFormat { Trimming = StringTrimming.EllipsisCharacter, FormatFlags = StringFormatFlags.NoWrap };
+                    g.DrawString(subTitle, fSub, sbSub, subRect, sf);
                 }
 
                 // Stock Indicator Pill
                 using (Font fStk = FontHelper.CreateFont(8F, FontStyle.Regular))
                 {
                     Color stkCol = prd.Stock > 10 ? ThemeManager.SuccessGreen : (prd.Stock > 0 ? ThemeManager.WarningYellow : ThemeManager.DangerRed);
-                    string stockSuffix = prd.Stock > 0 ? TranslationManager.T("InStock", "in stock") : TranslationManager.T("OutOfStock", "Out of stock");
+                    string stockSuffix = prd.Stock > 10 ? TranslationManager.T("InStock", "in stock") : (prd.Stock > 0 ? TranslationManager.T("LowStock", "Low Stock") : TranslationManager.T("OutOfStock", "Out of stock"));
                     string stkText = prd.Stock > 0 ? $"● {prd.Stock} {stockSuffix}" : $"● {stockSuffix}";
 
                     using (SolidBrush sb = new SolidBrush(stkCol))
-                        g.DrawString(stkText, fStk, sb, 10, 164);
+                        g.DrawString(stkText, fStk, sb, 10, 160);
                 }
 
                 // Price (Bold & Crisp)
                 using (Font fPrice = FontHelper.CreateFont(13F, FontStyle.Bold))
-                using (SolidBrush sb = new SolidBrush(ThemeManager.AccentBlue))
+                using (SolidBrush sb = new SolidBrush(inStock ? ThemeManager.AccentBlue : ThemeManager.TextSecondary))
                     g.DrawString($"${prd.Price:N2}", fPrice, sb, 10, 196);
             };
 
+            string btnText = inStock ? ("+ " + TranslationManager.T("Add", "Add")) : TranslationManager.T("OutOfStockBtn", "Out of Stock");
             Button btnAdd = new Button
             {
-                Text = TranslationManager.T("Add", "Add"),
-                Font = FontHelper.CreateFont(8.5F, FontStyle.Bold),
-                Size = new Size(66, 32),
-                Location = new Point(card.Width - 76, 192),
+                Text = btnText,
+                Font = FontHelper.CreateFontForText(btnText, 8.5F, FontStyle.Bold),
+                Size = new Size(76, 32),
+                Location = new Point(card.Width - 86, 194),
                 FlatStyle = FlatStyle.Flat,
-                BackColor = prd.Stock > 0 ? ThemeManager.AccentBlue : Color.FromArgb(160, 160, 160),
+                BackColor = inStock ? ThemeManager.AccentBlue : Color.FromArgb(160, 165, 175),
                 ForeColor = Color.White,
-                Cursor = prd.Stock > 0 ? Cursors.Hand : Cursors.Default,
-                Enabled = prd.Stock > 0
+                Cursor = inStock ? Cursors.Hand : Cursors.Default,
+                Enabled = inStock
             };
             btnAdd.FlatAppearance.BorderSize = 0;
             btnAdd.Paint += (s, e) =>
@@ -437,11 +648,24 @@ namespace assignment_code.UI.Views
                     bg.DrawString(bText, bf, tb, (btnAdd.Width - bsz.Width) / 2f, (btnAdd.Height - bsz.Height) / 2f);
                 }
             };
-            btnAdd.Click += (s, e) => _dataService.AddToCart(prd);
+
+            Action handleAdd = () =>
+            {
+                if (!inStock) return;
+                var existing = _dataService.CurrentCart.FirstOrDefault(c => c.Product.Id == prd.Id);
+                if (existing != null && existing.Quantity >= prd.Stock)
+                {
+                    MessageBox.Show(TranslationManager.T("MaxStockReached", "Maximum stock reached in cart."), "Stock Limit", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+                _dataService.AddToCart(prd);
+                card.Invalidate(true);
+            };
+
+            btnAdd.Click += (s, e) => handleAdd();
+            card.Click += (s, e) => handleAdd();
 
             card.Controls.Add(btnAdd);
-            card.Click += (s, e) => { if (prd.Stock > 0) _dataService.AddToCart(prd); };
-
             return card;
         }
 
@@ -451,6 +675,20 @@ namespace assignment_code.UI.Views
             if (_lblPay != null) _lblPay.Text = TranslationManager.T("PaymentMethod", "Payment Method:");
             if (_btnCheckout != null) _btnCheckout.Text = TranslationManager.T("CompleteSale", "Complete Sale (Checkout)");
             if (_btnClearCart != null) _btnClearCart.Text = TranslationManager.T("ClearCart", "Clear Cart");
+            if (_txtPosSearch != null) _txtPosSearch.PlaceholderText = TranslationManager.T("SearchProductsPos", "Search products or SKU...");
+
+            if (_cboStockFilter != null)
+            {
+                int curIdx = _cboStockFilter.SelectedIndex;
+                _cboStockFilter.Items.Clear();
+                _cboStockFilter.Items.AddRange(new object[] {
+                    TranslationManager.T("All", "All"),
+                    TranslationManager.T("InStock", "In Stock"),
+                    TranslationManager.T("LowStock", "Low Stock"),
+                    TranslationManager.T("OutOfStock", "Out of Stock")
+                });
+                _cboStockFilter.SelectedIndex = (curIdx >= 0 && curIdx < _cboStockFilter.Items.Count) ? curIdx : 0;
+            }
             PopulateCategoryPills();
         }
 
@@ -644,7 +882,14 @@ namespace assignment_code.UI.Views
             BackColor = ThemeManager.Background;
             if (_leftProductArea != null) _leftProductArea.BackColor = ThemeManager.Background;
             if (_categoryPillsPanel != null) _categoryPillsPanel.BackColor = ThemeManager.Background;
+            if (_posFilterRowPanel != null) _posFilterRowPanel.BackColor = ThemeManager.Background;
             if (_productsGrid != null) _productsGrid.BackColor = ThemeManager.Background;
+            if (_cboStockFilter != null)
+            {
+                _cboStockFilter.BackColor = ThemeManager.CardBackground;
+                _cboStockFilter.ForeColor = ThemeManager.TextPrimary;
+            }
+            if (_lblAvailableCount != null) _lblAvailableCount.ForeColor = ThemeManager.TextSecondary;
 
             if (_rightCartPanel != null) _rightCartPanel.BackColor = ThemeManager.CardBackground;
             if (_summaryBoxPanel != null) _summaryBoxPanel.BackColor = ThemeManager.IsDark ? Color.FromArgb(20, 26, 42) : Color.FromArgb(248, 250, 254);
@@ -652,6 +897,7 @@ namespace assignment_code.UI.Views
             if (_lblTax != null) _lblTax.ForeColor = ThemeManager.TextSecondary;
             if (_lblTotal != null) _lblTotal.ForeColor = ThemeManager.AccentBlue;
             if (_btnCheckout != null) _btnCheckout.BackColor = ThemeManager.AccentBlue;
+
             PopulateCategoryPills();
             PopulateProducts();
             UpdateCartUI();
@@ -677,8 +923,7 @@ namespace assignment_code.UI.Views
             int leftW = totalW - rightW - 18;
 
             _leftProductArea.SetBounds(0, 10, leftW, totalH - 20);
-            _categoryPillsPanel.Width = leftW;
-            _productsGrid.SetBounds(0, 48, leftW, totalH - 78);
+            AdjustLeftProductAreaLayout();
 
             _rightCartPanel.SetBounds(leftW + 14, 10, rightW, totalH - 20);
 
@@ -711,6 +956,210 @@ namespace assignment_code.UI.Views
             int btnY = payLabelY + 20 + payH + 10;
             _btnCheckout.SetBounds(14, btnY, rightW - 28, chkH);
             _btnClearCart.SetBounds(14, btnY + chkH + 4, rightW - 28, clrH);
+        }
+
+        private void AdjustLeftProductAreaLayout()
+        {
+            if (_categoryPillsPanel == null || _leftProductArea == null) return;
+
+            int leftW = _leftProductArea.Width;
+            if (leftW <= 0) return;
+
+            _categoryPillsPanel.Width = leftW;
+            _categoryPillsPanel.PerformLayout();
+
+            int maxBottom = 0;
+            foreach (Control c in _categoryPillsPanel.Controls)
+            {
+                if (c.Bottom > maxBottom) maxBottom = c.Bottom;
+            }
+            int pillsHeight = Math.Max(44, maxBottom + 4);
+            _categoryPillsPanel.Height = pillsHeight;
+
+            int filterY = _categoryPillsPanel.Bottom + 6;
+            if (_posFilterRowPanel != null)
+            {
+                _posFilterRowPanel.SetBounds(0, filterY, leftW, 36);
+                if (_lblAvailableCount != null)
+                {
+                    _lblAvailableCount.Location = new Point(Math.Max(380, Math.Min(leftW - 170, 380)), 8);
+                }
+            }
+
+            int gridY = (_posFilterRowPanel != null ? _posFilterRowPanel.Bottom : _categoryPillsPanel.Bottom) + 6;
+            int gridH = Math.Max(100, _leftProductArea.Height - gridY);
+            if (_productsGrid != null)
+            {
+                _productsGrid.SetBounds(0, gridY, leftW, gridH);
+            }
+        }
+
+        private void DrawProductIllustration(Graphics g, Product prd, Rectangle bounds, Color catColor)
+        {
+            GraphicsHelper.SetHighQuality(g);
+
+            // 1. Hero background banner
+            using (GraphicsPath bp = GraphicsHelper.GetRoundedRectanglePath(bounds, 10))
+            {
+                Color bannerBg = ThemeManager.IsDark
+                    ? Color.FromArgb(45, catColor.R / 4, catColor.G / 4, catColor.B / 4)
+                    : Color.FromArgb(28, catColor);
+                using (SolidBrush sb = new SolidBrush(bannerBg))
+                    g.FillPath(sb, bp);
+            }
+
+            // 2. Central circular badge
+            int circleSize = 44;
+            int cx = bounds.X + (bounds.Width - circleSize) / 2;
+            int cy = bounds.Y + (bounds.Height - circleSize) / 2;
+            Rectangle badgeRect = new Rectangle(cx, cy, circleSize, circleSize);
+
+            using (SolidBrush cBrush = new SolidBrush(ThemeManager.IsDark ? Color.FromArgb(60, catColor.R / 3, catColor.G / 3, catColor.B / 3) : Color.White))
+            {
+                g.FillEllipse(cBrush, badgeRect);
+            }
+            using (Pen cPen = new Pen(Color.FromArgb(80, catColor), 1.5f))
+            {
+                g.DrawEllipse(cPen, badgeRect);
+            }
+
+            // 3. Crisp Vector Icon inside the badge
+            Rectangle iconRect = new Rectangle(cx + 10, cy + 10, 24, 24);
+            string sku = prd.Sku?.ToUpper() ?? "";
+            string name = prd.Name?.ToLower() ?? "";
+
+            using (Pen pen = new Pen(catColor, 2f) { StartCap = LineCap.Round, EndCap = LineCap.Round, LineJoin = LineJoin.Round })
+            using (SolidBrush brush = new SolidBrush(catColor))
+            {
+                int x = iconRect.X;
+                int y = iconRect.Y;
+                int w = iconRect.Width;
+                int h = iconRect.Height;
+
+                if (sku.Contains("ELE-001") || name.Contains("headphone"))
+                {
+                    // Headphones: headband + ear pads
+                    g.DrawArc(pen, x + 2, y + 2, w - 4, h - 6, 180, 180);
+                    using (GraphicsPath lp = GraphicsHelper.GetRoundedRectanglePath(new Rectangle(x + 1, y + 10, 5, 11), 2))
+                        g.FillPath(brush, lp);
+                    using (GraphicsPath rp = GraphicsHelper.GetRoundedRectanglePath(new Rectangle(x + w - 6, y + 10, 5, 11), 2))
+                        g.FillPath(brush, rp);
+                }
+                else if (sku.Contains("ELE-002") || name.Contains("watch"))
+                {
+                    // Smartwatch: watch body + top & bottom straps
+                    g.DrawLine(pen, x + 7, y + 1, x + 7, y + 5);
+                    g.DrawLine(pen, x + w - 7, y + 1, x + w - 7, y + 5);
+                    g.DrawLine(pen, x + 7, y + h - 5, x + 7, y + h - 1);
+                    g.DrawLine(pen, x + w - 7, y + h - 5, x + w - 7, y + h - 1);
+                    using (GraphicsPath wp = GraphicsHelper.GetRoundedRectanglePath(new Rectangle(x + 4, y + 5, w - 8, h - 10), 4))
+                    {
+                        g.DrawPath(pen, wp);
+                    }
+                    g.FillEllipse(brush, x + w / 2f - 2, y + h / 2f - 2, 4, 4);
+                }
+                else if (sku.Contains("ELE-003") || name.Contains("charger"))
+                {
+                    // GaN Fast Charger: Plug prongs + square + lightning
+                    g.DrawLine(pen, x + 6, y + 2, x + 6, y + 7);
+                    g.DrawLine(pen, x + w - 6, y + 2, x + w - 6, y + 7);
+                    using (GraphicsPath cp = GraphicsHelper.GetRoundedRectanglePath(new Rectangle(x + 3, y + 7, w - 6, h - 9), 3))
+                    {
+                        g.DrawPath(pen, cp);
+                    }
+                    var bolt = new PointF[] {
+                        new PointF(x + w * 0.55f, y + 9),
+                        new PointF(x + w * 0.40f, y + 14),
+                        new PointF(x + w * 0.52f, y + 14),
+                        new PointF(x + w * 0.45f, y + 20),
+                        new PointF(x + w * 0.62f, y + 13),
+                        new PointF(x + w * 0.50f, y + 13)
+                    };
+                    g.FillPolygon(brush, bolt);
+                }
+                else if (sku.Contains("BEV-001") || name.Contains("coffee") || name.Contains("cold brew"))
+                {
+                    // Coffee cup + steam
+                    g.DrawLine(pen, x + 4, y + 8, x + 5, y + h - 4);
+                    g.DrawLine(pen, x + 5, y + h - 4, x + w - 8, y + h - 4);
+                    g.DrawLine(pen, x + w - 8, y + h - 4, x + w - 7, y + 8);
+                    g.DrawLine(pen, x + 4, y + 8, x + w - 7, y + 8);
+                    g.DrawArc(pen, x + w - 8, y + 9, 6, 7, -90, 180);
+                    g.DrawLine(pen, x + 8, y + 5, x + 8, y + 2);
+                    g.DrawLine(pen, x + 13, y + 5, x + 13, y + 2);
+                }
+                else if (sku.Contains("BEV-002") || name.Contains("matcha") || name.Contains("tea"))
+                {
+                    // Matcha bowl / teacup + leaf
+                    g.DrawArc(pen, x + 3, y + 6, w - 6, h - 10, 0, 180);
+                    g.DrawLine(pen, x + 3, y + 11, x + w - 3, y + 11);
+                    g.DrawLine(pen, x + 6, y + h - 4, x + w - 6, y + h - 4);
+                    g.DrawArc(pen, x + w / 2f - 4, y + 2, 8, 6, 180, 180);
+                }
+                else if (sku.Contains("SNK-001") || name.Contains("almond") || name.Contains("nut"))
+                {
+                    // Almond snack bowl / nut
+                    g.DrawEllipse(pen, x + 3, y + 6, 8, 12);
+                    g.DrawEllipse(pen, x + 12, y + 6, 8, 12);
+                    g.DrawArc(pen, x + 2, y + 12, w - 4, 9, 0, 180);
+                }
+                else if (sku.Contains("SNK-002") || name.Contains("chocolate"))
+                {
+                    // Chocolate Bar
+                    using (GraphicsPath chp = GraphicsHelper.GetRoundedRectanglePath(new Rectangle(x + 4, y + 3, w - 8, h - 6), 2))
+                    {
+                        g.DrawPath(pen, chp);
+                    }
+                    g.DrawLine(pen, x + 4, y + h / 2f, x + w - 4, y + h / 2f);
+                    g.DrawLine(pen, x + w / 2f, y + 3, x + w / 2f, y + h - 3);
+                }
+                else if (sku.Contains("APP-001") || name.Contains("tee") || name.Contains("shirt"))
+                {
+                    // T-shirt silhouette
+                    var tPoints = new PointF[] {
+                        new PointF(x + 7, y + 3),
+                        new PointF(x + 2, y + 8),
+                        new PointF(x + 5, y + 11),
+                        new PointF(x + 7, y + 9),
+                        new PointF(x + 7, y + h - 3),
+                        new PointF(x + w - 7, y + h - 3),
+                        new PointF(x + w - 7, y + 9),
+                        new PointF(x + w - 5, y + 11),
+                        new PointF(x + w - 2, y + 8),
+                        new PointF(x + w - 7, y + 3),
+                        new PointF(x + w * 0.62f, y + 3),
+                        new PointF(x + w * 0.50f, y + 6),
+                        new PointF(x + w * 0.38f, y + 3)
+                    };
+                    g.DrawPolygon(pen, tPoints);
+                }
+                else if (sku.Contains("APP-002") || name.Contains("cardholder") || name.Contains("wallet"))
+                {
+                    // Cardholder: wallet body + card
+                    g.DrawRectangle(pen, x + 5, y + 4, w - 10, 6);
+                    using (GraphicsPath vp = GraphicsHelper.GetRoundedRectanglePath(new Rectangle(x + 3, y + 8, w - 6, h - 11), 3))
+                    {
+                        g.DrawPath(pen, vp);
+                    }
+                    g.DrawLine(pen, x + 3, y + 14, x + w - 3, y + 14);
+                }
+                else if (sku.Contains("STA-001") || name.Contains("journal") || name.Contains("book"))
+                {
+                    // Hardcover Journal
+                    using (GraphicsPath jp = GraphicsHelper.GetRoundedRectanglePath(new Rectangle(x + 4, y + 3, w - 8, h - 6), 2))
+                    {
+                        g.DrawPath(pen, jp);
+                    }
+                    g.DrawLine(pen, x + 8, y + 3, x + 8, y + h - 3);
+                    g.DrawLine(pen, x + 11, y + 7, x + w - 7, y + 7);
+                    g.DrawLine(pen, x + 11, y + 11, x + w - 7, y + 11);
+                    g.DrawLine(pen, x + 11, y + 15, x + w - 9, y + 15);
+                }
+                else
+                {
+                    GraphicsHelper.DrawIcon(g, "products", iconRect, catColor, 2f);
+                }
+            }
         }
 
         private string GetCategoryIcon(string category)
@@ -762,3 +1211,4 @@ namespace assignment_code.UI.Views
         }
     }
 }
+

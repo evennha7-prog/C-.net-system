@@ -74,8 +74,14 @@ namespace assignment_code.UI.Views
             this._recentCommentsCard.Location = new System.Drawing.Point(454, 576);
             this._recentCommentsCard.Name = "_recentCommentsCard";
             this._recentCommentsCard.Size = new System.Drawing.Size(558, 240);
-            this._recentCommentsCard.TabIndex = 7;
-
+            this._contentWrapper.Controls.Add(this._kpiPosts);
+            this._contentWrapper.Controls.Add(this._kpiCategories);
+            this._contentWrapper.Controls.Add(this._kpiMedia);
+            this._contentWrapper.Controls.Add(this._kpiComments);
+            this._contentWrapper.Controls.Add(this._barChartPostGrowth);
+            this._contentWrapper.Controls.Add(this._splineChartCommentsTrend);
+            this._contentWrapper.Controls.Add(this._latestPostsCard);
+            this._contentWrapper.Controls.Add(this._recentCommentsCard);
             this.AutoScroll = true;
             this.Controls.Add(this._contentWrapper);
             this.Font = new System.Drawing.Font("Roboto", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));

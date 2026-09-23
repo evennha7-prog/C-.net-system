@@ -9,6 +9,8 @@ namespace assignment_code.UI.Views
     public partial class DashboardView : UserControl, IRefreshableView
     {
         private DashboardService _dashboardService = new DashboardService();
+        private Label _lblTitle;
+        private Label _lblSubtitle;
 
         public DashboardView()
         {
@@ -18,6 +20,8 @@ namespace assignment_code.UI.Views
                       ControlStyles.ResizeRedraw, true);
 
             InitializeComponent();
+            InitializeHeader();
+            DoubleBufferHelper.EnableDoubleBufferingTree(this);
             SetupEventHandlers();
             BindInitialData();
             ApplyTheme();
@@ -25,16 +29,45 @@ namespace assignment_code.UI.Views
             StoreDataService.Instance.DataRefreshed += (s, e) => RefreshView();
             TranslationManager.LanguageChanged += (s, e) =>
             {
+                if (_lblTitle != null) _lblTitle.Text = TranslationManager.T("DashboardOverview", "Store Overview & Analytics");
+                if (_lblSubtitle != null) _lblSubtitle.Text = TranslationManager.T("DashboardSubtitle", "Real-time revenue, inventory status, and order performance.");
                 if (_barChartPostGrowth != null) _barChartPostGrowth.Title = TranslationManager.T("ProductGrowth", "Product Growth");
                 if (_splineChartCommentsTrend != null) _splineChartCommentsTrend.Title = TranslationManager.T("SalesOrderTrends", "Sales & Order Trends");
                 RefreshView();
             };
         }
 
+        private void InitializeHeader()
+        {
+            _lblTitle = new Label
+            {
+                Text = TranslationManager.T("DashboardOverview", "Store Overview & Analytics"),
+                Font = FontHelper.CreateFont(13.5F, FontStyle.Bold),
+                ForeColor = ThemeManager.TextPrimary,
+                AutoSize = true,
+                BackColor = Color.Transparent
+            };
+            _lblSubtitle = new Label
+            {
+                Text = TranslationManager.T("DashboardSubtitle", "Real-time revenue, inventory status, and order performance."),
+                Font = FontHelper.CreateFont(8.75F, FontStyle.Regular),
+                ForeColor = ThemeManager.TextSecondary,
+                AutoSize = true,
+                BackColor = Color.Transparent
+            };
+            if (_contentWrapper != null)
+            {
+                _contentWrapper.Controls.Add(_lblTitle);
+                _contentWrapper.Controls.Add(_lblSubtitle);
+            }
+        }
+
         private void ApplyTheme()
         {
             BackColor = ThemeManager.Background;
             if (_contentWrapper != null) _contentWrapper.BackColor = ThemeManager.Background;
+            if (_lblTitle != null) _lblTitle.ForeColor = ThemeManager.TextPrimary;
+            if (_lblSubtitle != null) _lblSubtitle.ForeColor = ThemeManager.TextSecondary;
             Invalidate(true);
         }
 
@@ -83,39 +116,41 @@ namespace assignment_code.UI.Views
             int containerW = Math.Max(720, ClientSize.Width);
             _contentWrapper.Width = containerW;
 
+            int pad = 20;
             int gap = 16;
+            int contentW = containerW - (pad * 2);
+
             int startY = 16;
+            if (_lblTitle != null) _lblTitle.Location = new Point(pad, startY);
+            if (_lblSubtitle != null) _lblSubtitle.Location = new Point(pad, startY + 28);
 
-            // Row 1: KPI Cards (with section header)
-            int headerH = 32;
-            int headerY = startY;
-
-            int kpiW = (containerW - (gap * 3)) / 4;
+            // Row 1: KPI Cards
+            int kpiY = startY + 54;
+            int kpiW = (contentW - (gap * 3)) / 4;
             int kpiH = 120;
-            int kpiY = headerY + headerH + gap;
 
-            _kpiPosts.SetBounds(0, kpiY, kpiW, kpiH);
-            _kpiCategories.SetBounds(kpiW + gap, kpiY, kpiW, kpiH);
-            _kpiMedia.SetBounds((kpiW + gap) * 2, kpiY, kpiW, kpiH);
-            _kpiComments.SetBounds((kpiW + gap) * 3, kpiY, containerW - ((kpiW + gap) * 3), kpiH);
+            _kpiPosts.SetBounds(pad, kpiY, kpiW, kpiH);
+            _kpiCategories.SetBounds(pad + kpiW + gap, kpiY, kpiW, kpiH);
+            _kpiMedia.SetBounds(pad + (kpiW + gap) * 2, kpiY, kpiW, kpiH);
+            _kpiComments.SetBounds(pad + (kpiW + gap) * 3, kpiY, contentW - ((kpiW + gap) * 3), kpiH);
 
             // Row 2: Charts
             int row2Y = kpiY + kpiH + gap;
             int chartH = 260;
-            int leftColW = (int)((containerW - gap) * 0.44f);
-            int rightColW = containerW - leftColW - gap;
+            int leftColW = (int)((contentW - gap) * 0.44f);
+            int rightColW = contentW - leftColW - gap;
 
-            _barChartPostGrowth.SetBounds(0, row2Y, leftColW, chartH);
-            _splineChartCommentsTrend.SetBounds(leftColW + gap, row2Y, rightColW, chartH);
+            _barChartPostGrowth.SetBounds(pad, row2Y, leftColW, chartH);
+            _splineChartCommentsTrend.SetBounds(pad + leftColW + gap, row2Y, rightColW, chartH);
 
             // Row 3: Tables
             int row3Y = row2Y + chartH + gap;
-            int tableH = 240;
+            int tableH = 250;
 
-            _latestPostsCard.SetBounds(0, row3Y, leftColW, tableH);
-            _recentCommentsCard.SetBounds(leftColW + gap, row3Y, rightColW, tableH);
+            _latestPostsCard.SetBounds(pad, row3Y, leftColW, tableH);
+            _recentCommentsCard.SetBounds(pad + leftColW + gap, row3Y, rightColW, tableH);
 
-            _contentWrapper.Height = row3Y + tableH + 20;
+            _contentWrapper.Height = row3Y + tableH + 30;
         }
 
         private void BindInitialData()

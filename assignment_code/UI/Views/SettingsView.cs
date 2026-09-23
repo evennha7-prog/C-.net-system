@@ -15,7 +15,6 @@ namespace assignment_code.UI.Views
         private Panel _contentWrapper;
         private Panel _storeProfileCard;
         private Panel _posConfigCard;
-        private Panel _databaseCard;
 
         private TextBox _txtName;
         private TextBox _txtPhone;
@@ -26,14 +25,6 @@ namespace assignment_code.UI.Views
         private TextBox _txtReceiptHeader;
         private TextBox _txtReceiptFooter;
         private Button _btnSave;
-
-        // Database Card Controls
-        private Label _lblDbHost;
-        private Label _lblDbName;
-        private Label _lblDbStatus;
-        private Button _btnTestDb;
-        private Button _btnMigrateDb;
-        private TextBox _txtDbLog;
 
         public SettingsView()
         {
@@ -134,92 +125,7 @@ namespace assignment_code.UI.Views
 
             _posConfigCard.Controls.AddRange(new Control[] { _lblCur, _txtCurrency, _lblTax, _txtTax, _lblHdr, _txtReceiptHeader, _lblFtr, _txtReceiptFooter, _btnSave });
 
-            // 3. Database Migration Card
-            _databaseCard = new Panel { BackColor = ThemeManager.CardBackground };
-            _databaseCard.Paint += (s, e) => DrawCardBackground(e.Graphics, _databaseCard, TranslationManager.T("DatabaseSettings", "Database & Migration"));
-
-            string serverName = DbConnectionHelper.ServerDisplayName;
-            string db = EnvLoader.Get("DB_DATABASE", "mart_pccfpi");
-            string provider = DbConnectionHelper.ProviderDisplayName;
-
-            _lblDbHost = new Label
-            {
-                Text = $"Server / Host: {serverName}",
-                Left = 20,
-                Top = 48,
-                Width = 450,
-                Font = FontHelper.CreateFont(9F, FontStyle.Bold),
-                ForeColor = ThemeManager.TextPrimary
-            };
-
-            _lblDbName = new Label
-            {
-                Text = $"Database: {db} ({provider})",
-                Left = 20,
-                Top = 72,
-                Width = 450,
-                Font = FontHelper.CreateFont(8.5F, FontStyle.Regular),
-                ForeColor = ThemeManager.TextSecondary
-            };
-
-            _lblDbStatus = new Label
-            {
-                Text = "● Status: Ready / Connected",
-                Left = 20,
-                Top = 96,
-                Width = 450,
-                Font = FontHelper.CreateFont(8.5F, FontStyle.Regular),
-                ForeColor = ThemeManager.SuccessGreen
-            };
-
-            _btnTestDb = new Button
-            {
-                Text = TranslationManager.T("TestConnection", "Test DB Connection"),
-                Font = FontHelper.CreateFont(9F, FontStyle.Bold),
-                Left = 20,
-                Top = 126,
-                Width = 180,
-                Height = 36,
-                FlatStyle = FlatStyle.Flat,
-                BackColor = ThemeManager.HoverBackground,
-                ForeColor = ThemeManager.TextPrimary,
-                Cursor = Cursors.Hand
-            };
-            _btnTestDb.FlatAppearance.BorderColor = ThemeManager.BorderColor;
-            _btnTestDb.Click += async (s, e) => await TestConnectionAsync();
-
-            _btnMigrateDb = new Button
-            {
-                Text = TranslationManager.T("RunMigration", "Migrate Database Now"),
-                Font = FontHelper.CreateFont(9F, FontStyle.Bold),
-                Left = 210,
-                Top = 126,
-                Width = 200,
-                Height = 36,
-                FlatStyle = FlatStyle.Flat,
-                BackColor = ThemeManager.AccentBlue,
-                ForeColor = Color.White,
-                Cursor = Cursors.Hand
-            };
-            _btnMigrateDb.FlatAppearance.BorderSize = 0;
-            _btnMigrateDb.Click += async (s, e) => await RunMigrationAsync();
-
-            _txtDbLog = new TextBox
-            {
-                Left = 20,
-                Top = 172,
-                Multiline = true,
-                ReadOnly = true,
-                ScrollBars = ScrollBars.Vertical,
-                Font = new Font("Consolas", 8.5F),
-                BackColor = ThemeManager.SearchBoxBackground,
-                ForeColor = ThemeManager.TextPrimary,
-                Text = "Click 'Migrate Database Now' or 'Test DB Connection' to execute database operations."
-            };
-
-            _databaseCard.Controls.AddRange(new Control[] { _lblDbHost, _lblDbName, _lblDbStatus, _btnTestDb, _btnMigrateDb, _txtDbLog });
-
-            _contentWrapper.Controls.AddRange(new Control[] { _storeProfileCard, _posConfigCard, _databaseCard });
+            _contentWrapper.Controls.AddRange(new Control[] { _storeProfileCard, _posConfigCard });
 
             TranslationManager.LanguageChanged += (s, e) =>
             {
@@ -233,81 +139,11 @@ namespace assignment_code.UI.Views
                 _lblFtr.Text = TranslationManager.T("ReceiptFooter:", "Receipt Footer Message:");
                 _btnSave.Text = TranslationManager.T("SaveSettings", "Save Store Settings");
                 _btnSave.Font = FontHelper.CreateFont(9.5F, FontStyle.Bold);
-                _btnTestDb.Text = TranslationManager.T("TestConnection", "Test DB Connection");
-                _btnMigrateDb.Text = TranslationManager.T("RunMigration", "Migrate Database Now");
                 _storeProfileCard.Invalidate();
                 _posConfigCard.Invalidate();
-                _databaseCard.Invalidate();
             };
 
             RepositionContent();
-        }
-
-        private async Task TestConnectionAsync()
-        {
-            _btnTestDb.Enabled = false;
-            _lblDbStatus.Text = "Testing connection...";
-            _lblDbStatus.ForeColor = ThemeManager.WarningYellow;
-
-            bool ok = false;
-            string msg = "";
-            long elapsed = 0;
-
-            await Task.Run(() =>
-            {
-                ok = DbConnectionHelper.TestConnection(out msg, out elapsed);
-            });
-
-            _btnTestDb.Enabled = true;
-            if (ok)
-            {
-                _lblDbStatus.Text = "● Status: Connected (Online)";
-                _lblDbStatus.ForeColor = ThemeManager.SuccessGreen;
-                _txtDbLog.Text = $"[{DateTime.Now:HH:mm:ss}] Connection successful!\n" +
-                                 $"Provider: {DbConnectionHelper.ProviderDisplayName}\n" +
-                                 $"Server: {DbConnectionHelper.ServerDisplayName}\n" +
-                                 $"Database: {EnvLoader.Get("DB_DATABASE")}\n\n" +
-                                 $"{msg}";
-            }
-            else
-            {
-                _lblDbStatus.Text = "● Status: Connection Failed";
-                _lblDbStatus.ForeColor = ThemeManager.DangerRed;
-                var logMsg = msg;
-                var logElapsed = elapsed;
-                _txtDbLog.Text = $"[{DateTime.Now:HH:mm:ss}] Connection failed ({logElapsed}ms):\n{logMsg}\n\n" +
-                                 $"Provider: {DbConnectionHelper.ProviderDisplayName}\n" +
-                                 $"Server: {DbConnectionHelper.ServerDisplayName}\n" +
-                                 $"Database: {EnvLoader.Get("DB_DATABASE")}";
-            }
-        }
-
-        private async Task RunMigrationAsync()
-        {
-            _btnMigrateDb.Enabled = false;
-            _lblDbStatus.Text = "Testing/Running migration...";
-            _lblDbStatus.ForeColor = ThemeManager.WarningYellow;
-            _txtDbLog.Text = $"[{DateTime.Now:HH:mm:ss}] Starting database migration...\n";
-
-            MigrationResult res = null;
-            await Task.Run(() =>
-            {
-                res = DatabaseMigrator.Migrate(seedInitialData: true);
-            });
-
-            _btnMigrateDb.Enabled = true;
-            if (res != null && res.Success)
-            {
-                _lblDbStatus.Text = "● Status: Migrated & Up to Date";
-                _lblDbStatus.ForeColor = ThemeManager.SuccessGreen;
-                _txtDbLog.Text = $"[{DateTime.Now:HH:mm:ss}] {res.Message}\n\nExecution Log:\n" + string.Join("\r\n", res.ExecutedSteps);
-            }
-            else
-            {
-                _lblDbStatus.Text = "● Status: Migration Failed";
-                _lblDbStatus.ForeColor = ThemeManager.DangerRed;
-                _txtDbLog.Text = $"[{DateTime.Now:HH:mm:ss}] {res?.Message}\n\n" + (res?.Error != null ? res.Error.ToString() : "");
-            }
         }
 
         private void DrawCardBackground(Graphics g, Panel panel, string title)
@@ -363,14 +199,10 @@ namespace assignment_code.UI.Views
 
             _storeProfileCard.BackColor = ThemeManager.CardBackground;
             _posConfigCard.BackColor = ThemeManager.CardBackground;
-            _databaseCard.BackColor = ThemeManager.CardBackground;
             _btnSave.BackColor = ThemeManager.AccentBlue;
-            _txtDbLog.BackColor = ThemeManager.SearchBoxBackground;
-            _txtDbLog.ForeColor = ThemeManager.TextPrimary;
 
             _storeProfileCard.Invalidate();
             _posConfigCard.Invalidate();
-            _databaseCard.Invalidate();
             Invalidate(true);
         }
 
@@ -381,20 +213,13 @@ namespace assignment_code.UI.Views
             _contentWrapper.Width = w;
 
             int startY = 14;
-            int cardW = Math.Min(360, (w - 36) / 2);
-            int cardH = 300;
+            int cardW = Math.Min(380, (w - 36) / 2);
+            int cardH = 310;
 
             _storeProfileCard.SetBounds(0, startY, cardW, cardH);
             _posConfigCard.SetBounds(cardW + 16, startY, cardW, cardH);
 
-            int dbCardW = Math.Min(736, cardW * 2 + 16);
-            int dbCardY = startY + cardH + 16;
-            int dbCardH = 290;
-            _databaseCard.SetBounds(0, dbCardY, dbCardW, dbCardH);
-
-            _txtDbLog.SetBounds(20, 172, dbCardW - 40, 100);
-
-            _contentWrapper.Height = dbCardY + dbCardH + 30;
+            _contentWrapper.Height = startY + cardH + 40;
         }
     }
 }

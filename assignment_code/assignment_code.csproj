@@ -110,9 +110,7 @@
     <Content Include="teanslations.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include=".env">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <None Include=".env" />
     <Content Include="icons\*.*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -226,6 +224,9 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="UI\Controls\ModernButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\Controls\PosCategoryPillButton.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="UI\Controls\ManagementStatCard.cs">

@@ -26,7 +26,6 @@ namespace assignment_code
         private CustomersView _customersView;
         private UsersView _usersView;
         private ReportsView _reportsView;
-        private AppearanceView _appearanceView;
         private SettingsView _settingsView;
         private Control _activeView;
 
@@ -93,7 +92,6 @@ namespace assignment_code
             _customersView = new CustomersView { Dock = DockStyle.Fill, Visible = false };
             _usersView = new UsersView { Dock = DockStyle.Fill, Visible = false };
             _reportsView = new ReportsView { Dock = DockStyle.Fill, Visible = false };
-            _appearanceView = new AppearanceView { Dock = DockStyle.Fill, Visible = false };
             _settingsView = new SettingsView { Dock = DockStyle.Fill, Visible = false };
 
             _viewsContainer.Controls.AddRange(new Control[]
@@ -107,7 +105,6 @@ namespace assignment_code
                 _customersView,
                 _usersView,
                 _reportsView,
-                _appearanceView,
                 _settingsView
             });
 
@@ -115,7 +112,7 @@ namespace assignment_code
             {
                 _dashboardView, _productsView, _categoriesView, _posView,
                 _salesListView, _ordersView, _customersView, _usersView,
-                _reportsView, _appearanceView, _settingsView
+                _reportsView, _settingsView
             })
             {
                 v.Bounds = _viewsContainer.ClientRectangle;
@@ -178,6 +175,7 @@ namespace assignment_code
             _salesListView?.ApplySearch(query);
             _customersView?.ApplySearch(query);
             _usersView?.ApplySearch(query);
+            _posView?.ApplySearch(query);
         }
 
         private void Sidebar_MenuSelected(object sender, string menuName)
@@ -213,8 +211,6 @@ namespace assignment_code
                     ShowView(_reportsView);
                     break;
                 case "Appearance":
-                    ShowView(_appearanceView);
-                    break;
                 case "Settings":
                     ShowView(_settingsView);
                     break;

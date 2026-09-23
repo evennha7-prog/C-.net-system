@@ -126,6 +126,8 @@ namespace assignment_code.Services
 
             // Fallback hardcoded defaults if file was missing or empty
             AddDefault("Dashboard", "Dashboard", "ផ្ទាំងគ្រប់គ្រង");
+            AddDefault("DashboardOverview", "Store Overview & Analytics", "ទិដ្ឋភាពទូទៅនៃហាង & ការវិភាគ");
+            AddDefault("DashboardSubtitle", "Real-time revenue, inventory status, and order performance.", "ទិន្នន័យការលក់ តុល្យភាពទំនិញក្នុងស្តុក និងសកម្មភាពបញ្ជាទិញជាក់ស្តែង។");
             AddDefault("Products", "Products", "ទំនិញ");
             AddDefault("Categories", "Categories", "ប្រភេទ");
             AddDefault("Sale", "Sale", "ការលក់");
